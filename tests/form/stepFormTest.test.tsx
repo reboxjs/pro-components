@@ -2,11 +2,12 @@
 import React from 'react';
 import { Button } from 'antd';
 import { act } from 'react-dom/test-utils';
-import { StepsForm, StepsFormProps, ProFormText } from '@ant-design/pro-form';
-import { waitForComponentToPaint, waitTime } from '../util';
+import type { StepsFormProps } from '@ant-design/pro-form';
+import { StepsForm, ProFormText } from '@ant-design/pro-form';
+import { waitForComponentToPaint } from '../util';
 
 describe('StepsForm', () => {
-  it('🐲 basic use', () => {
+  it('🐲 basic use', async () => {
     const html = mount(
       <StepsForm>
         <StepsForm.StepForm title="表单1">
@@ -20,14 +21,18 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
+    await waitForComponentToPaint(html);
     expect(html.find('span.ant-steps-icon').length).toBe(3);
     expect(html.find('div.ant-steps-item-title').at(0).text()).toBe('表单1');
     expect(html.find('div.ant-steps-item-title').at(1).text()).toBe('表单2');
     expect(html.find('div.ant-steps-item-title').at(2).text()).toBe('表单3');
-    html.unmount();
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
-  it('🐲 stepsRender', () => {
+  it('🐲 stepsRender', async () => {
     const html = mount<StepsFormProps>(
       <StepsForm stepsRender={() => null}>
         <StepsForm.StepForm name="base" title="表单1">
@@ -41,6 +46,7 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
+    await waitForComponentToPaint(html);
 
     expect(html.find('.ant-steps').exists()).toBeFalsy();
 
@@ -49,10 +55,13 @@ describe('StepsForm', () => {
         stepsRender: (_, dom) => <div id="test">{dom}</div>,
       });
     });
-
+    await waitForComponentToPaint(html, 100);
     expect(html.find('.ant-steps').exists()).toBeTruthy();
     expect(html.find('div#test').exists()).toBeTruthy();
-    html.unmount();
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 pre button ', async () => {
@@ -80,7 +89,10 @@ describe('StepsForm', () => {
       html.find('button.ant-btn').at(0).simulate('click');
     });
     expect(onCurrentChange).toBeCalledWith(0);
-    html.unmount();
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 async onFinish', async () => {
@@ -121,7 +133,16 @@ describe('StepsForm', () => {
     });
     await waitForComponentToPaint(html);
     expect(onFinish).toBeCalled();
-    html.unmount();
+
+    await waitForComponentToPaint(html);
+
+    expect(fn).toBeCalled();
+    expect(currentFn).toBeCalled();
+
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 submit when onFinish is null', async () => {
@@ -156,11 +177,10 @@ describe('StepsForm', () => {
     expect(fn).toBeCalled();
     expect(currentFn).toBeCalled();
 
-    act(() => {
-      html.find('button.ant-btn.ant-btn-primary').simulate('click');
-    });
     await waitForComponentToPaint(html);
-    html.unmount();
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 onFinish return true', async () => {
@@ -191,7 +211,7 @@ describe('StepsForm', () => {
       html.find('button.ant-btn.ant-btn-primary').simulate('click');
     });
 
-    await waitTime(16);
+    await waitForComponentToPaint(html);
 
     act(() => {
       html.find('button.ant-btn.ant-btn-primary').simulate('click');
@@ -199,6 +219,45 @@ describe('StepsForm', () => {
 
     expect(fn).toBeCalled();
     expect(currentFn).toBeCalledWith(0);
+
+    await waitForComponentToPaint(html, 1200);
+    act(() => {
+      html.unmount();
+    });
+  });
+
+  it('🐲 onFinish throw error', async () => {
+    const currentFn = jest.fn();
+    const html = mount<StepsFormProps>(
+      <StepsForm
+        current={1}
+        onCurrentChange={(c) => {
+          currentFn(c);
+        }}
+        onFinish={async () => {
+          throw new Error('发生了错误');
+        }}
+      >
+        <StepsForm.StepForm name="base" title="表单1">
+          <ProFormText name="姓名" />
+        </StepsForm.StepForm>
+        <StepsForm.StepForm name="moreInfo" title="表单2">
+          <ProFormText name="邮箱" />
+        </StepsForm.StepForm>
+      </StepsForm>,
+    );
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.find('button.ant-btn.ant-btn-primary').simulate('click');
+    });
+
+    await waitForComponentToPaint(html);
+    expect(currentFn).not.toBeCalledWith(0);
+
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 submitter render=false', () => {
@@ -229,7 +288,7 @@ describe('StepsForm', () => {
         submitter={{
           render: (props) => {
             return (
-              <button type="button" id="rest" onClick={() => props?.onReset?.()}>
+              <button type="button" id="rest" onClick={() => props?.onPre?.()}>
                 rest
               </button>
             );
@@ -244,7 +303,7 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
-
+    await waitForComponentToPaint(html);
     expect(html.find('button#rest').exists()).toBeTruthy();
 
     act(() => {
@@ -253,6 +312,11 @@ describe('StepsForm', () => {
     await waitForComponentToPaint(html);
 
     expect(fn).toBeCalledWith(0);
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 current min=0', async () => {
@@ -281,22 +345,26 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
-    /**
-     *  因为上一步有限制，所以应该不触发
-     */
+    await waitForComponentToPaint(html);
+    /** 因为上一步有限制，所以应该不触发 */
     act(() => {
       html.find('button#rest').simulate('click');
     });
     await waitForComponentToPaint(html);
 
     expect(fn).toBeCalledTimes(0);
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
   });
 
   it('🐲 current max=1', async () => {
     const fn = jest.fn();
     const html = mount<StepsFormProps>(
       <StepsForm
-        current={0}
+        current={1}
         onCurrentChange={(current) => {
           fn(current);
         }}
@@ -318,18 +386,22 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
-    /**
-     *  因为下一步有限制，所以应该不触发
-     */
+    await waitForComponentToPaint(html);
+    /** 因为下一步有限制，所以应该不触发 */
     act(() => {
       html.find('button#rest').simulate('click');
     });
     await waitForComponentToPaint(html);
 
     expect(fn).toBeCalledTimes(0);
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
   });
 
-  it('🐲 submitter=false', () => {
+  it('🐲 submitter=false', async () => {
     const html = mount<StepsFormProps>(
       <StepsForm submitter={false}>
         <StepsForm.StepForm name="base" title="表单1">
@@ -340,14 +412,17 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
-
+    await waitForComponentToPaint(html);
     expect(
       html.find('.ant-pro-steps-form-step-active button.ant-btn.ant-btn-primary').exists(),
     ).toBeFalsy();
-    html.unmount();
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
-  it('🐲 submitter render function', () => {
+  it('🐲 submitter render function', async () => {
     const html = mount<StepsFormProps>(
       <StepsForm
         submitter={{
@@ -371,10 +446,13 @@ describe('StepsForm', () => {
 
     expect(html.find('button#next').exists()).toBeTruthy();
 
-    html.unmount();
+    await waitForComponentToPaint(html, 100);
+    act(() => {
+      html.unmount();
+    });
   });
 
-  it('🐲 support stepsFormRender', () => {
+  it('🐲 support stepsFormRender', async () => {
     const html = mount<StepsFormProps>(
       <StepsForm
         stepsFormRender={(dom, submitter) => {
@@ -394,12 +472,18 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
+    await waitForComponentToPaint(html);
     expect(html.find('#content form').length).toBe(2);
     expect(html.find('#content form').exists()).toBeTruthy();
     expect(html.find('#footer button').exists()).toBeTruthy();
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
   });
 
-  it('🐲 support stepsFormRender', () => {
+  it('🐲 support stepsFormRender', async () => {
     const html = mount<StepsFormProps>(
       <StepsForm
         stepFormRender={(dom) => {
@@ -414,9 +498,50 @@ describe('StepsForm', () => {
         </StepsForm.StepForm>
       </StepsForm>,
     );
+    await waitForComponentToPaint(html);
     expect(html.find('#content').length).toBe(1);
     expect(html.find('form #content').length).toBe(1);
     expect(html.find('form').length).toBe(2);
     expect(html.find('form #content').exists()).toBeTruthy();
+
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
+  });
+  it('🐲 support deepmerge form value', async () => {
+    const submit = jest.fn(() => Promise.resolve());
+    const html = mount<StepsFormProps>(
+      <StepsForm
+        stepFormRender={(dom) => {
+          return <div id="content">{dom}</div>;
+        }}
+        onFinish={submit}
+      >
+        <StepsForm.StepForm name="base" title="表单1">
+          <ProFormText name={['info', 'name']} initialValue={'chenshuai'} />
+        </StepsForm.StepForm>
+        <StepsForm.StepForm name="moreInfo" title="表单2">
+          <ProFormText name={['info', 'age']} initialValue={'22'} />
+        </StepsForm.StepForm>
+      </StepsForm>,
+    );
+    await waitForComponentToPaint(html);
+    act(() => {
+      html.find('button.ant-btn.ant-btn-primary').simulate('click');
+    });
+
+    await waitForComponentToPaint(html);
+
+    act(() => {
+      html.find('button.ant-btn.ant-btn-primary').simulate('click');
+    });
+    await waitForComponentToPaint(html);
+    expect(submit).toBeCalledWith({
+      info: {
+        name: 'chenshuai',
+        age: '22',
+      },
+    });
   });
 });

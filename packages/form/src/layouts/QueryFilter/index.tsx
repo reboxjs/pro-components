@@ -1,25 +1,31 @@
 /* eslint-disable no-param-reassign */
-import React, { useState, ReactElement } from 'react';
-import { Row, Col, Form, Divider } from 'antd';
-import { FormProps } from 'antd/lib/form/Form';
+import type { ReactElement } from 'react';
+import { useContext } from 'react';
+import React, { useMemo } from 'react';
+import { Row, Col, Form, Divider, ConfigProvider } from 'antd';
+import type { FormInstance, FormProps } from 'antd/lib/form/Form';
 import RcResizeObserver from 'rc-resize-observer';
 import { useIntl } from '@ant-design/pro-provider';
+import { isBrowser, useMountMergeState } from '@ant-design/pro-utils';
 import useMergedState from 'rc-util/lib/hooks/useMergedState';
 
-import BaseForm, { CommonFormProps } from '../../BaseForm';
-import Actions, { ActionsProps } from './Actions';
+import type { CommonFormProps } from '../../BaseForm';
+import BaseForm from '../../BaseForm';
+import type { ActionsProps } from './Actions';
+import Actions from './Actions';
+import classNames from 'classnames';
+
+import './index.less';
 
 const CONFIG_SPAN_BREAKPOINTS = {
   xs: 513,
   sm: 513,
   md: 785,
-  lg: 1057,
+  lg: 992,
   xl: 1057,
   xxl: Infinity,
 };
-/**
- * 配置表单列变化的容器宽度断点
- */
+/** 配置表单列变化的容器宽度断点 */
 const BREAKPOINTS = {
   vertical: [
     // [breakpoint, cols, layout]
@@ -39,6 +45,7 @@ const BREAKPOINTS = {
 
 /**
  * 合并用户和默认的配置
+ *
  * @param layout
  * @param width
  */
@@ -79,38 +86,30 @@ export type SpanConfig =
 
 export type BaseQueryFilterProps = Omit<ActionsProps, 'submitter' | 'setCollapsed' | 'isForm'> & {
   defaultCollapsed?: boolean;
-
-  labelLayout?: 'default' | 'growth' | 'vertical';
+  layout?: FormProps['layout'];
   defaultColsNumber?: number;
   labelWidth?: number | 'auto';
   split?: boolean;
-  /**
-   * 配置列数
-   */
+  className?: string;
+  /** 配置列数 */
   span?: SpanConfig;
 
-  /**
-   * 查询按钮的文本
-   */
+  /** 查询按钮的文本 */
   searchText?: string;
-  /**
-   * 重置按钮的文本
-   */
+  /** 重置按钮的文本 */
   resetText?: string;
 
   form?: FormProps['form'];
   /**
+   * @param searchConfig 基础的配置
+   * @param props 更加详细的配置 {
+   *     type?: 'form' | 'list' | 'table' | 'cardList' | undefined;
+   *     form: FormInstance;
+   *     submit: () => void;
+   *     collapse: boolean;
+   *     setCollapse: (collapse: boolean) => void;
+   *     showCollapseButton: boolean; }
    * @name 底部操作栏的 render
-   * @params searchConfig 基础的配置
-   * @params props 更加详细的配置
-   * {
-      type?: 'form' | 'list' | 'table' | 'cardList' | undefined;
-      form: FormInstance;
-      submit: () => void;
-      collapse: boolean;
-      setCollapse: (collapse: boolean) => void;
-      showCollapseButton: boolean;
-   * }
    */
   optionRender?:
     | ((
@@ -119,219 +118,295 @@ export type BaseQueryFilterProps = Omit<ActionsProps, 'submitter' | 'setCollapse
         dom: React.ReactNode[],
       ) => React.ReactNode[])
     | false;
+  /** 忽略 Form.Item 规则 */
+  ignoreRules?: boolean;
 };
 
-export type QueryFilterProps = Omit<FormProps, 'onFinish'> &
-  CommonFormProps &
+const flatMapItems = (items: React.ReactNode[], ignoreRules?: boolean): React.ReactNode[] => {
+  return items.flatMap((item: any) => {
+    if (item?.type.displayName === 'ProForm-Group' && !item.props?.title) {
+      return item.props.children;
+    }
+    if (ignoreRules && React.isValidElement(item)) {
+      return React.cloneElement(item, {
+        ...(item.props as any),
+        formItemProps: {
+          ...(item.props as any)?.formItemProps,
+          rules: [],
+        },
+      });
+    }
+    return item;
+  });
+};
+
+export type QueryFilterProps<T = Record<string, any>> = Omit<FormProps<T>, 'onFinish'> &
+  CommonFormProps<T> &
   BaseQueryFilterProps & {
-    onReset?: () => void;
+    onReset?: (values: T) => void;
   };
 
-const QueryFilter: React.FC<QueryFilterProps> = (props) => {
+const QueryFilterContent: React.FC<{
+  defaultCollapsed: boolean;
+  onCollapse: undefined | ((collapsed: boolean) => void);
+  collapsed: boolean | undefined;
+  resetText: string | undefined;
+  searchText: string | undefined;
+  split?: boolean;
+  form: FormInstance<any>;
+  items: React.ReactNode[];
+  submitter?: JSX.Element | false;
+  showLength: number;
+  collapseRender: QueryFilterProps<any>['collapseRender'];
+  spanSize: {
+    span: number;
+    layout: FormProps['layout'];
+  };
+  optionRender: BaseQueryFilterProps['optionRender'];
+  ignoreRules?: boolean;
+  preserve?: boolean;
+}> = (props) => {
+  const intl = useIntl();
+  const resetText = props.resetText || intl.getMessage('tableForm.reset', '重置');
+  const searchText = props.searchText || intl.getMessage('tableForm.search', '搜索');
+
+  const [collapsed, setCollapsed] = useMergedState<boolean>(
+    () => props.defaultCollapsed && !!props.submitter,
+    {
+      value: props.collapsed,
+      onChange: props.onCollapse,
+    },
+  );
+
+  const { optionRender, collapseRender, split, items, spanSize, showLength } = props;
+
+  const submitter = useMemo(() => {
+    if (!props.submitter) {
+      return null;
+    }
+    return React.cloneElement(props.submitter, {
+      searchConfig: {
+        resetText,
+        submitText: searchText,
+      },
+      render: optionRender
+        ? (_: any, dom: React.ReactNode[]) =>
+            optionRender(
+              {
+                ...props,
+                resetText,
+                searchText,
+              },
+              props,
+              dom,
+            )
+        : optionRender,
+      ...props.submitter.props,
+    });
+  }, [props, resetText, searchText, optionRender]);
+
+  // totalSpan 统计控件占的位置，计算 offset 保证查询按钮在最后一列
+  let totalSpan = 0;
+  let itemLength = 0;
+
+  // for split compute
+  let currentSpan = 0;
+  const doms = flatMapItems(items, props.ignoreRules).map(
+    (item: React.ReactNode, index: number) => {
+      // 如果 formItem 自己配置了 hidden，默认使用它自己的
+      const colSize = React.isValidElement<any>(item) ? item?.props?.colSize : 1;
+      const colSpan = Math.min(spanSize.span * (colSize || 1), 24);
+      // 计算总的 totalSpan 长度
+      totalSpan += colSpan;
+      const hidden: boolean =
+        (item as ReactElement<{ hidden: boolean }>)?.props?.hidden ||
+        // 如果收起了
+        (collapsed &&
+          // 如果 超过显示长度 且 总长度超过了 24
+          index >= showLength - 1 &&
+          !!index &&
+          totalSpan >= 24);
+
+      itemLength += 1;
+
+      // 每一列的key, 一般是存在的
+      const itemKey = (React.isValidElement(item) && (item.key || `${item.props?.name}`)) || index;
+
+      if (React.isValidElement(item) && hidden) {
+        if (!props.preserve) {
+          return null;
+        }
+        return React.cloneElement(item, {
+          hidden: true,
+          key: itemKey || index,
+        });
+      }
+
+      if (24 - (currentSpan % 24) < colSpan) {
+        // 如果当前行空余位置放不下，那么折行
+        totalSpan += 24 - (currentSpan % 24);
+        currentSpan += 24 - (currentSpan % 24);
+      }
+
+      currentSpan += colSpan;
+
+      const colItem = (
+        <Col key={itemKey} span={colSpan}>
+          {item}
+        </Col>
+      );
+      if (split && currentSpan % 24 === 0 && index < itemLength - 1) {
+        return [
+          colItem,
+          <Col span="24" key="line">
+            <Divider style={{ marginTop: -8, marginBottom: 16 }} dashed />
+          </Col>,
+        ];
+      }
+      return colItem;
+    },
+  );
+
+  /** 是否需要展示 collapseRender */
+  const needCollapseRender = useMemo(() => {
+    if (totalSpan < 24 || itemLength < showLength) {
+      return false;
+    }
+    return true;
+  }, [itemLength, showLength, totalSpan]);
+
+  const offset = useMemo(() => {
+    const offsetSpan = (currentSpan % 24) + spanSize.span;
+    return 24 - offsetSpan;
+  }, [currentSpan, spanSize.span]);
+
+  return (
+    <Row gutter={24} justify="start" key="resize-observer-row">
+      {doms}
+      {submitter && (
+        <Col
+          key="submitter"
+          span={spanSize.span}
+          offset={offset}
+          style={{
+            textAlign: 'right',
+          }}
+        >
+          <Form.Item label=" " colon={false} className="pro-form-query-filter-actions">
+            <Actions
+              key="pro-form-query-filter-actions"
+              collapsed={collapsed}
+              collapseRender={needCollapseRender ? collapseRender : false}
+              submitter={submitter}
+              setCollapsed={setCollapsed}
+            />
+          </Form.Item>
+        </Col>
+      )}
+    </Row>
+  );
+};
+
+const defaultWidth = isBrowser() ? document.body.clientWidth : 1024;
+
+function QueryFilter<T = Record<string, any>>(props: QueryFilterProps<T>) {
   const {
     collapsed: controlCollapsed,
-    defaultCollapsed = false,
     layout,
+    defaultCollapsed = true,
     defaultColsNumber,
     span,
+    searchText,
+    resetText,
+    optionRender,
+    collapseRender,
     onReset,
     onCollapse,
-    optionRender,
     labelWidth = '80',
     style,
     split,
-    collapseRender,
-    resetText: propsResetText,
-    searchText: propsSearchText,
+    preserve = true,
+    ignoreRules,
     ...rest
   } = props;
 
-  const intl = useIntl();
+  const context = useContext(ConfigProvider.ConfigContext);
+  const baseClassName = context.getPrefixCls('pro-form-query-filter');
 
-  const [collapsed, setCollapsed] = useMergedState<boolean>(() => defaultCollapsed, {
-    value: controlCollapsed,
-    onChange: onCollapse,
-  });
-  // use style.width as the defaultWidth for unit test
-  const defaultWidth: number = (typeof style?.width === 'number' ? style?.width : 1024) as number;
+  const [width, setWidth] = useMountMergeState(
+    () => (typeof style?.width === 'number' ? style?.width : defaultWidth) as number,
+  );
 
-  const [spanSize, setSpanSize] = useState<{
-    span: number;
-    layout: FormProps['layout'];
-  }>(() => getSpanConfig(layout, defaultWidth + 16, span));
+  const spanSize = useMemo(() => getSpanConfig(layout, width + 16, span), [layout, width, span]);
 
-  const showLength =
-    defaultColsNumber !== undefined ? defaultColsNumber : Math.max(1, 24 / spanSize.span - 1);
+  const showLength = useMemo(() => {
+    if (defaultColsNumber !== undefined) {
+      return defaultColsNumber;
+    }
+    return Math.max(1, 24 / spanSize.span);
+  }, [defaultColsNumber, spanSize.span]);
 
-  let labelFlexStyle;
-  if (labelWidth && spanSize.layout !== 'vertical' && labelWidth !== 'auto') {
-    labelFlexStyle = `0 0 ${labelWidth}px`;
-  }
-  const resetText = propsResetText || intl.getMessage('tableForm.reset', '重置');
-  const searchText = propsSearchText || intl.getMessage('tableForm.search', '搜索');
-
-  /**
-   * 如果 optionRender 是个方法调用一下
-   */
-  const render =
-    typeof optionRender === 'function'
-      ? (_: any, dom: React.ReactNode[]) =>
-          optionRender(
-            {
-              ...props,
-              resetText,
-              searchText,
-            },
-            props,
-            dom,
-          )
-      : optionRender;
+  const labelFlexStyle = useMemo(() => {
+    if (labelWidth && spanSize.layout !== 'vertical' && labelWidth !== 'auto') {
+      return `0 0 ${labelWidth}px`;
+    }
+    return undefined;
+  }, [spanSize.layout, labelWidth]);
 
   return (
-    <BaseForm
-      {...rest}
-      style={style}
-      layout={spanSize.layout}
-      fieldProps={{
-        style: {
-          width: '100%',
-        },
-      }}
-      formItemProps={{
-        labelCol: {
-          flex: labelFlexStyle,
-        },
-      }}
-      groupProps={{
-        titleStyle: {
-          display: 'inline-block',
-          marginRight: 16,
-        },
-        titleRender: (title) => `${title}:`,
-      }}
-      contentRender={(items, renderSubmitter) => {
-        const itemsWithInfo: {
-          span: number;
-          hidden: boolean;
-          element: React.ReactNode;
-          key: string | number;
-        }[] = [];
-
-        let submitter = renderSubmitter;
-        if (submitter) {
-          submitter = React.cloneElement(submitter, {
-            searchConfig: {
-              resetText,
-              submitText: searchText,
-            },
-            render,
-            onReset,
-            ...submitter.props,
-          });
+    <RcResizeObserver
+      key="resize-observer"
+      onResize={(offset) => {
+        if (width !== offset.width && offset.width > 17) {
+          setWidth(offset.width);
         }
-
-        // totalSpan 统计控件占的位置，计算 offset 保证查询按钮在最后一列
-        let totalSpan = 0;
-        let lastVisibleItemIndex = items.length - 1;
-        items
-          // 打平 ProForm-Group
-          .flatMap((item: any) => {
-            if (item?.type.displayName === 'ProForm-Group' && !item.props?.title) {
-              return item.props.children;
-            }
-            return item;
-          })
-          .forEach((item: React.ReactNode, index: number) => {
-            // 如果 formItem 自己配置了 hidden，默认使用它自己的
-            let hidden: boolean =
-              (item as ReactElement<{ hidden: boolean }>)?.props?.hidden || false;
-            const colSize = React.isValidElement<any>(item) ? item?.props?.colSize || 1 : 1;
-            const colSpan = Math.min(spanSize.span * colSize, 24);
-
-            if ((collapsed && index >= showLength) || hidden) {
-              hidden = true;
-            } else {
-              if (24 - (totalSpan % 24) < colSpan) {
-                // 如果当前行空余位置放不下，那么折行
-                totalSpan += 24 - (totalSpan % 24);
-              }
-              totalSpan += colSpan;
-              lastVisibleItemIndex = index;
-            }
-
-            itemsWithInfo.push({
-              span: colSpan,
-              element: item,
-              key: React.isValidElement(item)
-                ? item.key || `${item.props?.name || index}-${index}}`
-                : index,
-              hidden,
-            });
-          });
-        // for split compute
-        let currentSpan = 0;
-
-        const defaultRender = items.length - 1 >= showLength ? undefined : false;
-        return (
-          <RcResizeObserver
-            key="resize-observer"
-            onResize={({ width }) => {
-              setSpanSize(getSpanConfig(layout, width, span));
-            }}
-          >
-            <Row gutter={16} justify="start" key="resize-observer-row">
-              {itemsWithInfo.map((item, index) => {
-                if (React.isValidElement(item.element) && item.hidden) {
-                  return React.cloneElement(item.element, {
-                    hidden: true,
-                    key: item.key || index,
-                  });
-                }
-                currentSpan += item.span;
-                const colItem = (
-                  <Col key={item.key} span={item.span}>
-                    {item.element}
-                  </Col>
-                );
-                if (split && currentSpan % 24 === 0 && index < lastVisibleItemIndex) {
-                  return [
-                    colItem,
-                    <Divider key="line" style={{ marginTop: -8, marginBottom: 16 }} dashed />,
-                  ];
-                }
-                return colItem;
-              })}
-              {submitter && (
-                <Col
-                  span={spanSize.span}
-                  offset={24 - spanSize.span - (totalSpan % 24)}
-                  style={{
-                    textAlign: 'right',
-                  }}
-                >
-                  <Form.Item label=" " colon={false} className="pro-form-query-filter-actions">
-                    <Actions
-                      collapsed={collapsed}
-                      collapseRender={collapseRender || defaultRender}
-                      {...rest}
-                      submitter={submitter}
-                      setCollapsed={setCollapsed}
-                      style={{
-                        // 当表单是垂直布局且提交按钮不是独自在一行的情况下需要设置一个 paddingTop 使得与控件对齐
-                        paddingTop: layout === 'vertical' && totalSpan % 24 ? 30 : 0,
-                        // marginBottom 是为了和 FormItem 统一让下方保留一个 24px 的距离
-                        marginBottom: 24,
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-              )}
-            </Row>
-          </RcResizeObserver>
-        );
       }}
-    />
+    >
+      <BaseForm
+        preserve={preserve}
+        {...rest}
+        className={classNames(baseClassName, rest.className)}
+        onReset={onReset}
+        style={style}
+        layout={spanSize.layout}
+        fieldProps={{
+          style: {
+            width: '100%',
+          },
+        }}
+        formItemProps={{
+          labelCol: {
+            flex: labelFlexStyle,
+          },
+        }}
+        groupProps={{
+          titleStyle: {
+            display: 'inline-block',
+            marginRight: 16,
+          },
+        }}
+        contentRender={(items, renderSubmitter, form) => (
+          <QueryFilterContent
+            spanSize={spanSize}
+            collapsed={controlCollapsed}
+            form={form}
+            collapseRender={collapseRender}
+            defaultCollapsed={defaultCollapsed}
+            onCollapse={onCollapse}
+            optionRender={optionRender}
+            submitter={renderSubmitter}
+            items={items}
+            split={split}
+            resetText={props.resetText}
+            searchText={props.searchText}
+            preserve={preserve}
+            ignoreRules={ignoreRules}
+            showLength={showLength}
+          />
+        )}
+      />
+    </RcResizeObserver>
   );
-};
+}
 
 export default QueryFilter;

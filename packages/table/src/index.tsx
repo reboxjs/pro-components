@@ -1,9 +1,9 @@
+import type { IntlType } from '@ant-design/pro-provider';
 import {
   ConfigProviderWrap,
   ConfigProvider,
   ConfigConsumer,
   createIntl,
-  IntlType,
   arEGIntl,
   zhCNIntl,
   enUSIntl,
@@ -17,25 +17,28 @@ import {
   frFRIntl,
   ptBRIntl,
 } from '@ant-design/pro-provider';
-import { ProCoreActionType } from '@ant-design/pro-utils';
-import { FieldStatus, ProFieldValueType, FieldIndexColumn } from '@ant-design/pro-field';
+import type { ProFieldValueType, RowEditableConfig } from '@ant-design/pro-utils';
 
-import ProTable, { ProColumns, ProColumnType, ProTableProps } from './Table';
-import { RequestData } from './useFetchData';
-import TableDropdown from './component/Dropdown';
-import ListToolBar, { ListToolBarProps } from './component/ListToolBar';
+import { FieldStatus, FieldIndexColumn } from '@ant-design/pro-field';
+import ProTable from './Table';
+import TableDropdown from './components/Dropdown';
+import type { ListToolBarProps } from './components/ListToolBar';
+import ListToolBar from './components/ListToolBar';
 
-import Search from './Form';
-import defaultRenderText from './defaultRender';
-import { ColumnsState } from './container';
+import Search from './components/Form';
+import cellRenderToFromItem from './utils/cellRenderToFromItem';
+import type { ColumnsState } from './container';
+import type { ActionType, ProColumns, ProColumnType, ProTableProps, RequestData } from './typing';
+import EditableProTable from './components/EditableTable';
 
 type ProColumnsValueType = ProFieldValueType;
-
-export type ActionType = ProCoreActionType;
+type TableRowEditable<T> = RowEditableConfig<T>;
 
 export type {
   ProTableProps,
   IntlType,
+  ActionType,
+  TableRowEditable,
   ColumnsState,
   ProColumnsValueType,
   ProColumns,
@@ -50,13 +53,14 @@ export {
   ListToolBar,
   FieldStatus as TableStatus,
   Search,
+  EditableProTable,
   ConfigProvider as IntlProvider,
   ConfigProvider,
   ConfigConsumer as IntlConsumer,
   ConfigConsumer,
   zhCNIntl,
   FieldIndexColumn as IndexColumn,
-  defaultRenderText,
+  cellRenderToFromItem as defaultRenderText,
   createIntl,
   arEGIntl,
   enUSIntl,

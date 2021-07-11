@@ -1,13 +1,94 @@
 ﻿---
-title: pro-field
+title: ProField - 更新日志
 nav:
-  title: Change Log
+  title: 更新日志
   path: /changelog
 group:
   path: /
 ---
 
 # Change Log
+
+## @ant-design/pro-field@1.15.0
+
+`2021-04-15`
+
+- 🐛 fix(field): fix index column align center [#2454](https://github.com/ant-design/pro-components/pull/2454) [@drizzlesconsin](https://github.com/drizzlesconsin)
+
+## @ant-design/pro-field@1.14.1
+
+`2021-04-06`
+
+- 💥 feat(table): table column sorter supports field [#2376](https://github.com/ant-design/pro-components/pull/2376) [@xiefengnian](https://github.com/xiefengnian)
+
+## @ant-design/pro-field@1.11.0
+
+`2021-03-08`
+
+- 🐛 fix(field): valueType 为对象时 不走 空值判断 [#2100](https://github.com/ant-design/pro-components/pull/2100) [@tolerance-go](https://github.com/tolerance-go)
+- 💥 feat(field): add color pick [#2089](https://github.com/ant-design/pro-components/pull/2089) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.10.0
+
+`2021-02-22`
+
+- 🐛 fix(field): omit fieldProps and support onChange [#1886](https://github.com/ant-design/pro-components/pull/1886) [@chenshuai2144](https://github.com/chenshuai2144)
+- 💥 feat(field): support timeRange [#1884](https://github.com/ant-design/pro-components/pull/1884) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.9.3
+
+`2021-02-02`
+
+- 🐛 fix(table): fix fieldProps no has bug [#1776](https://github.com/ant-design/pro-components/pull/1776) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.9.1
+
+`2021-01-21`
+
+- 🐛 fix(field): select support labelInValue [#1708](https://github.com/ant-design/pro-components/pull/1708) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.8.4
+
+`2021-01-11`
+
+- 🐛 fix(field): fix valueEnum disabled no work error [#1567](https://github.com/ant-design/pro-components/pull/1567) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.8.0
+
+`2021-01-05`
+
+- 💥 feat(field): text use CompositionInput [#1499](https://github.com/ant-design/pro-components/pull/1499) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.7.0
+
+`2021-01-05`
+
+- 🐛 fix(table): fix fieldProps.onChange no work error [#1479](https://github.com/ant-design/pro-components/pull/1479) [@chenshuai2144](https://github.com/chenshuai2144)
+- 💥 feat(field): support image valueType [#1480](https://github.com/ant-design/pro-components/pull/1480) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.5.2
+
+`2020-12-31`
+
+- 🐛 fix(field): 当 value 值为 0 时，fieldLabel 显示异常 bug [#1435](https://github.com/ant-design/pro-components/pull/1435) [@oldturkey](https://github.com/oldturkey)
+
+## @ant-design/pro-field@1.5.0
+
+`2020-12-28`
+
+- 💥 feat(field): 在 labelInVaue 的场景下能显示备选项里不存在的 valuezhi [#1390](https://github.com/ant-design/pro-components/pull/1390) [@oldturkey](https://github.com/oldturkey)
+
+## @ant-design/pro-field@1.3.0
+
+`2020-12-03`
+
+- 💥 feat(field): support new valueType `second` [#1177](https://github.com/ant-design/pro-components/pull/1177) [@chenshuai2144](https://github.com/chenshuai2144)
+
+## @ant-design/pro-field@1.2.0
+
+`2020-11-27`
+
+- 🐛 fix(field): fix ProFormTimePicker value no moment error [#1054](https://github.com/ant-design/pro-components/pull/1054) [@chenshuai2144](https://github.com/chenshuai2144)
 
 ## @ant-design/pro-field@1.1.2
 

@@ -20,12 +20,12 @@ Los componentes de la Serie Pro se colocan aquí para soportar componentes de se
 Cualquier tipo de contribución es bienvenida, aquí hay algunos ejemplos de cómo puede contribuir a este proyecto 😃 ：
 
 - Utilice Ant Design Pro, umi y ProComponents en su trabajo diario.
-- Envie [problemas](http://github.com/ant-design/https://github.com/ant-design/pro-components/issues) para informar errores o hacer preguntas
-- Proponer [solicitudes de extracción](http://github.com/ant-design/https://github.com/ant-design/pro-components/pulls) para mejorar nuestro código.
+- Envie [problemas](https://github.com/ant-design/pro-components/issues) para informar errores o hacer preguntas
+- Proponer [solicitudes de extracción](https://github.com/ant-design/pro-components/pulls) para mejorar nuestro código.
 
 ## Componente Kanban
 
-| Componentes | Descargas | Descarga una versión|
+| Componentes | Descargas | Descarga una versión |
 | --- | --- | --- |
 | pro-layout | [![layout](https://img.shields.io/npm/dw/@ant-design/pro-layout.svg)](https://www.npmjs.com/package/@ant-design/pro-layout) | [![npm package](https://img.shields.io/npm/v/@ant-design/pro-layout.svg?style=flat-square?style=flat-square)](https://www.npmjs.com/package/@ant-design/pro-layout) |
 | pro-table | [![table](https://img.shields.io/npm/dw/@ant-design/pro-table.svg)](https://www.npmjs.com/package/@ant-design/pro-table) | [![npm package](https://img.shields.io/npm/v/@ant-design/pro-table.svg?style=flat-square?style=flat-square)](https://www.npmjs.com/package/@ant-design/pro-table) |

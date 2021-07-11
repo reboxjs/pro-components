@@ -1,8 +1,10 @@
-import { Popconfirm, Space } from 'antd';
+import { Popconfirm, Space, Menu, Dropdown } from 'antd';
 import React from 'react';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-table';
+import ProTable from '@ant-design/pro-table';
+import { DownOutlined } from '@ant-design/icons';
 
-export interface Member {
+export type Member = {
   avatar: string;
   realName: string;
   nickName: string;
@@ -11,14 +13,15 @@ export interface Member {
   phone: string;
   role: RoleType;
   permission?: string[];
-}
+};
 
-export interface RoleMapType {
-  [propName: string]: {
+export type RoleMapType = Record<
+  string,
+  {
     name: string;
     desc: string;
-  };
-}
+  }
+>;
 
 export type RoleType = 'admin' | 'operator';
 
@@ -54,9 +57,16 @@ for (let i = 0; i < 5; i += 1) {
   });
 }
 
+const roleMenu = (
+  <Menu>
+    <Menu.Item key="admin">管理员</Menu.Item>
+    <Menu.Item key="operator">操作员</Menu.Item>
+  </Menu>
+);
+
 const MemberList: React.FC = () => {
   const renderRemoveUser = (text: string) => (
-    <Popconfirm title={`确认${text}吗?`} okText="是" cancelText="否">
+    <Popconfirm key="popconfirm" title={`确认${text}吗?`} okText="是" cancelText="否">
       <a>{text}</a>
     </Popconfirm>
   );
@@ -85,7 +95,13 @@ const MemberList: React.FC = () => {
     {
       dataIndex: 'role',
       title: '角色',
-      render: (_, record) => RoleMap[record.role || 'admin'].name,
+      render: (_, record) => (
+        <Dropdown overlay={roleMenu}>
+          <span>
+            {RoleMap[record.role || 'admin'].name} <DownOutlined />
+          </span>
+        </Dropdown>
+      ),
     },
     {
       dataIndex: 'permission',
@@ -101,12 +117,13 @@ const MemberList: React.FC = () => {
     {
       title: '操作',
       dataIndex: 'x',
+      valueType: 'option',
       render: (_, record) => {
         let node = renderRemoveUser('退出');
         if (record.role === 'admin') {
           node = renderRemoveUser('移除');
         }
-        return node;
+        return [<a key="edit">编辑</a>, node];
       },
     },
   ];

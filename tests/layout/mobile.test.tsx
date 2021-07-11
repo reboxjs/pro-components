@@ -1,8 +1,9 @@
 ﻿import { mount, render } from 'enzyme';
 import React from 'react';
 import BasicLayout from '@ant-design/pro-layout';
-import defaultProps from './defaultProps';
+import { act } from 'react-dom/test-utils';
 
+import defaultProps from './defaultProps';
 import { waitForComponentToPaint } from '../util';
 
 describe('mobile BasicLayout', () => {
@@ -32,13 +33,11 @@ describe('mobile BasicLayout', () => {
     const html = render(
       <BasicLayout {...defaultProps} getContainer={false} onCollapse={() => {}} />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
   it('📱 collapsed=false', async () => {
     const html = render(<BasicLayout {...defaultProps} getContainer={false} collapsed={false} />);
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -46,7 +45,6 @@ describe('mobile BasicLayout', () => {
     const html = render(
       <BasicLayout {...defaultProps} getContainer={false} layout="mix" collapsed={false} />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -60,7 +58,6 @@ describe('mobile BasicLayout', () => {
         collapsed={false}
       />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -74,7 +71,6 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={false}
       />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -88,7 +84,6 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={() => 'title'}
       />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -102,7 +97,6 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={() => 'title'}
       />,
     );
-    waitForComponentToPaint(html);
     expect(html).toMatchSnapshot();
   });
 
@@ -122,9 +116,19 @@ describe('mobile BasicLayout', () => {
     );
 
     waitForComponentToPaint(html);
-
-    html.find('span.ant-pro-global-header-collapsed-button').simulate('click');
+    act(() => {
+      html.find('span.ant-pro-global-header-collapsed-button').simulate('click');
+    });
+    waitForComponentToPaint(html);
+    act(() => {
+      html.find('div.ant-drawer-mask').simulate('click');
+    });
+    waitForComponentToPaint(html);
     expect(onCollapse).toHaveBeenCalled();
-    html.unmount();
+
+    waitForComponentToPaint(html);
+    act(() => {
+      html.unmount();
+    });
   });
 });

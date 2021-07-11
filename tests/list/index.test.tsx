@@ -1,9 +1,18 @@
 import { mount } from 'enzyme';
-import React, { useState, ReactText } from 'react';
+import type { ReactText } from 'react';
+import React, { useState } from 'react';
 import ProList from '@ant-design/pro-list';
 import { act } from 'react-dom/test-utils';
 import PaginationDemo from '../../packages/list/src/demos/pagination';
 import { waitForComponentToPaint } from '../util';
+import { Tag } from 'antd';
+
+type DataSourceType = {
+  name: string;
+  desc: {
+    text: string;
+  };
+};
 
 describe('List', () => {
   it('🚏 base use', async () => {
@@ -31,6 +40,62 @@ describe('List', () => {
     expect(html.find('.ant-pro-list-row-description').text()).toEqual('desc text');
   });
 
+  it('🚏 only has content', async () => {
+    const html = mount(
+      <ProList
+        dataSource={[
+          {
+            name: '我是名称',
+            desc: {
+              text: 'desc text',
+            },
+          },
+        ]}
+        metas={{
+          content: {
+            render: () => {
+              return (
+                <div>
+                  段落示意：蚂蚁金服设计平台
+                  design.alipay.com，用最小的工作量，无缝接入蚂蚁金服生态，提供跨越设计与开发的体验解决方案。蚂蚁金服设计平台
+                  design.alipay.com，用最小的工作量，无缝接入蚂蚁金服生态提供跨越设计与开发的体验解决方案。
+                </div>
+              );
+            },
+          },
+        }}
+      />,
+    );
+    expect(html.render()).toMatchSnapshot();
+  });
+
+  it('🚏 only has description', async () => {
+    const html = mount(
+      <ProList
+        dataSource={[
+          {
+            name: '我是名称',
+            desc: {
+              text: 'desc text',
+            },
+          },
+        ]}
+        metas={{
+          description: {
+            render: () => (
+              <>
+                <Tag>语雀专栏</Tag>
+                <Tag>设计语言</Tag>
+                <Tag>蚂蚁金服</Tag>
+              </>
+            ),
+          },
+        }}
+      />,
+    );
+    expect(html.render()).toMatchSnapshot();
+  });
+
   it('🚏 empty', async () => {
     const html = mount(
       <ProList
@@ -41,13 +106,13 @@ describe('List', () => {
         }}
       />,
     );
-    expect(html.find('.ant-empty-description').text()).toEqual('No Data');
+    expect(html.find('.ant-empty-description').text()).toEqual('暂无数据');
   });
 
   it('🚏 expandable', async () => {
     const onExpand = jest.fn();
     const Wrapper = () => {
-      const [expandedRowKeys, onExpandedRowsChange] = useState<ReactText[]>([]);
+      const [expandedRowKeys, onExpandedRowsChange] = useState<readonly ReactText[]>([]);
       return (
         <ProList
           dataSource={[
@@ -69,6 +134,35 @@ describe('List', () => {
     const html = mount(<Wrapper />);
     expect(html.find('.ant-pro-list-row-description').length).toEqual(0);
     html.find('.ant-pro-list-row-expand-icon').simulate('click');
+    expect(html.find('.ant-pro-list-row-content').text()).toEqual('我是内容');
+    expect(onExpand).toHaveBeenCalledWith(true, expect.objectContaining({ name: '我是名称' }));
+  });
+
+  it('🚏 expandable support expandRowByClick', async () => {
+    const onExpand = jest.fn();
+    const Wrapper = () => {
+      const [expandedRowKeys, onExpandedRowsChange] = useState<readonly ReactText[]>([]);
+      return (
+        <ProList
+          dataSource={[
+            {
+              name: '我是名称',
+              content: <div>我是内容</div>,
+            },
+          ]}
+          metas={{
+            title: {
+              dataIndex: 'name',
+            },
+            content: {},
+          }}
+          expandable={{ expandedRowKeys, onExpandedRowsChange, onExpand, expandRowByClick: true }}
+        />
+      );
+    };
+    const html = mount(<Wrapper />);
+    expect(html.find('.ant-pro-list-row-description').length).toEqual(0);
+    html.find('.ant-list-item').simulate('click');
     expect(html.find('.ant-pro-list-row-content').text()).toEqual('我是内容');
     expect(onExpand).toHaveBeenCalledWith(true, expect.objectContaining({ name: '我是名称' }));
   });
@@ -108,7 +202,7 @@ describe('List', () => {
 
   it('🚏 expandable with expandedRowRender', async () => {
     const Wrapper = () => {
-      const [expandedRowKeys, onExpandedRowsChange] = useState<ReactText[]>([]);
+      const [expandedRowKeys, onExpandedRowsChange] = useState<readonly ReactText[]>([]);
       return (
         <ProList
           dataSource={[
@@ -147,14 +241,73 @@ describe('List', () => {
     );
   });
 
+  it('🚏 expandable with expandIcon', async () => {
+    const fn = jest.fn();
+    const Wrapper = () => {
+      return (
+        <ProList
+          dataSource={[
+            {
+              name: '我是名称',
+              content: <div>我是内容</div>,
+            },
+          ]}
+          metas={{
+            title: {
+              dataIndex: 'name',
+            },
+            content: {},
+          }}
+          expandable={{
+            expandIcon: ({ record }) => (
+              <div id="test_click" onClick={() => fn(record.name)} className="expand-icon" />
+            ),
+          }}
+          rowKey={(item) => {
+            return item.name;
+          }}
+        />
+      );
+    };
+    const html = mount(<Wrapper />);
+
+    await waitForComponentToPaint(html, 1200);
+
+    expect(html.find('.expand-icon')).toHaveLength(1);
+
+    act(() => {
+      html.find('#test_click').simulate('click');
+    });
+
+    expect(fn).toBeCalledWith('我是名称');
+  });
+
+  it('🚏 ProList support renderItem', async () => {
+    const Wrapper = () => {
+      return (
+        <ProList
+          dataSource={[
+            {
+              name: '我是名称',
+              content: <div>我是内容</div>,
+            },
+          ]}
+          renderItem={(_, index) => {
+            return <div id="test_index">{index}</div>;
+          }}
+          rowKey={(item) => {
+            return item.name;
+          }}
+        />
+      );
+    };
+    const html = mount(<Wrapper />);
+
+    expect(html.find('#test_index').exists()).toBeTruthy();
+  });
+
   it('🚏 rowSelection', async () => {
     const Wrapper = () => {
-      const [selectedRowKeys, setSelectedRowKeys] = useState<ReactText[]>([]);
-      const rowSelection = {
-        selectedRowKeys,
-        selections: true,
-        onChange: (keys: ReactText[]) => setSelectedRowKeys(keys),
-      };
       return (
         <ProList
           dataSource={[
@@ -167,7 +320,7 @@ describe('List', () => {
               description: '我是描述',
             },
           ]}
-          rowSelection={rowSelection}
+          rowSelection={{}}
           metas={{
             title: {
               dataIndex: 'name',
@@ -179,18 +332,26 @@ describe('List', () => {
     };
     const html = mount(<Wrapper />);
     expect(html.find('.ant-checkbox-input').length).toEqual(2);
-    html.find('.ant-checkbox-input').at(0).simulate('change');
+    html
+      .find('.ant-checkbox-input')
+      .at(0)
+      .simulate('change', {
+        target: {
+          checked: true,
+        },
+      });
+    await waitForComponentToPaint(html, 1000);
     expect(html.find('.ant-checkbox-input').at(0).prop('checked')).toEqual(true);
     expect(html.find('.ant-checkbox-input').at(1).prop('checked')).toEqual(false);
   });
 
-  it('🚏 pagination', async () => {
+  it('🚏 support pagination', async () => {
     const html = mount(<PaginationDemo />);
     expect(html.find('.ant-list-item').length).toEqual(5);
     act(() => {
       html.find('.ant-pagination-item').at(1).simulate('click');
     });
-    await waitForComponentToPaint(html, 20);
+    await waitForComponentToPaint(html, 200);
     expect(html.find('.ant-list-item').length).toEqual(2);
 
     act(() => {
@@ -203,7 +364,7 @@ describe('List', () => {
       html.find('.ant-select-item-option').at(3).simulate('click');
     });
 
-    await waitForComponentToPaint(html, 20);
+    await waitForComponentToPaint(html, 200);
 
     expect(html.find('.ant-list-item').length).toEqual(7);
   });
@@ -242,7 +403,7 @@ describe('List', () => {
         }}
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(html.find('.ant-pro-list-row-title').length).toEqual(2);
     act(() => {
       html.find('.ant-pro-core-field-label').simulate('click');
@@ -262,15 +423,123 @@ describe('List', () => {
       html.find('.ant-btn.ant-btn-primary').simulate('click');
     });
 
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(onRequest).toHaveBeenCalledWith(
       {
         current: 1,
-        pageSize: 20,
+        pageSize: 5,
         title: 'test',
       },
       {},
       {},
     );
+  });
+
+  it('🚏 ProList support onRow', async () => {
+    const onClick = jest.fn();
+    const onMouseEnter = jest.fn();
+    const html = mount(
+      <ProList<DataSourceType>
+        dataSource={[
+          {
+            name: '我是名称',
+            desc: {
+              text: 'desc text',
+            },
+          },
+        ]}
+        metas={{
+          title: {
+            dataIndex: 'name',
+          },
+          description: {
+            dataIndex: ['desc', 'text'],
+          },
+        }}
+        onRow={(record: DataSourceType) => {
+          return {
+            onMouseEnter: () => {
+              onMouseEnter(record.name);
+            },
+            onClick: () => {
+              onClick();
+            },
+          };
+        }}
+      />,
+    );
+
+    act(() => {
+      expect(html.find('.ant-list-item').simulate('click'));
+      html.update();
+    });
+
+    await waitForComponentToPaint(html);
+
+    act(() => {
+      expect(html.find('.ant-list-item').simulate('mouseenter'));
+      html.update();
+    });
+
+    await waitForComponentToPaint(html);
+
+    expect(onClick).toBeCalled();
+    expect(onMouseEnter).toBeCalledWith('我是名称');
+  });
+
+  it('🚏 ProList support itemHeaderRender', async () => {
+    const html = mount(
+      <ProList<DataSourceType>
+        dataSource={[
+          {
+            name: '我是名称',
+            desc: {
+              text: 'desc text',
+            },
+          },
+        ]}
+        itemHeaderRender={(item) => <>qixian:{item.name}</>}
+        metas={{
+          title: {
+            dataIndex: 'name',
+          },
+          description: {
+            dataIndex: ['desc', 'text'],
+          },
+        }}
+      />,
+    );
+
+    waitForComponentToPaint(html);
+
+    expect(html.find('.ant-pro-list-row-header').at(0).text()).toBe('qixian:我是名称');
+  });
+
+  it('🚏 ProList support itemTitleRender', async () => {
+    const html = mount(
+      <ProList<DataSourceType>
+        dataSource={[
+          {
+            name: '我是名称',
+            desc: {
+              text: 'desc text',
+            },
+          },
+        ]}
+        itemTitleRender={(item) => <>qixian:{item.name}</>}
+        metas={{
+          title: {
+            dataIndex: 'name',
+          },
+          description: {
+            dataIndex: ['desc', 'text'],
+          },
+        }}
+      />,
+    );
+
+    waitForComponentToPaint(html);
+
+    expect(html.find('.ant-pro-list-row-header').at(0).text()).toBe('qixian:我是名称desc text');
   });
 });

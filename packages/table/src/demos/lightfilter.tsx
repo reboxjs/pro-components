@@ -1,14 +1,15 @@
 import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import ProTable, { ProColumns, TableDropdown } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-table';
+import ProTable, { TableDropdown } from '@ant-design/pro-table';
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   creator: string;
   createdAt: number;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -25,13 +26,11 @@ for (let i = 0; i < 5; i += 1) {
 const columns: ProColumns<TableListItem>[] = [
   {
     title: '应用名称',
-    width: 80,
     dataIndex: 'name',
     render: (_) => <a>{_}</a>,
   },
   {
     title: '创建者',
-    width: 80,
     dataIndex: 'creator',
     valueType: 'select',
     valueEnum: {
@@ -52,7 +51,6 @@ const columns: ProColumns<TableListItem>[] = [
         </Tooltip>
       </>
     ),
-    width: 140,
     key: 'since',
     dataIndex: 'createdAt',
     valueType: 'date',
@@ -60,7 +58,7 @@ const columns: ProColumns<TableListItem>[] = [
   },
   {
     title: '操作',
-    width: 180,
+    width: '164px',
     key: 'option',
     valueType: 'option',
     render: () => [

@@ -168,13 +168,12 @@ Array [
 exports[`Table ColumnSetting 🎏 config provide render 1`] = `
 <div
   class="qixian-pro-table"
-  id="ant-design-pro-table"
 >
   <div
     class="qixian-pro-table-search qixian-pro-table-search-query-filter"
   >
     <form
-      class="qixian-form qixian-form-horizontal"
+      class="qixian-form qixian-form-horizontal qixian-pro-form-query-filter"
     >
       <input
         style="display: none;"
@@ -182,11 +181,11 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
       />
       <div
         class="qixian-row qixian-row-start"
-        style="margin-left: -8px; margin-right: -8px;"
+        style="margin-left: -12px; margin-right: -12px;"
       >
         <div
           class="qixian-col qixian-col-8"
-          style="padding-left: 8px; padding-right: 8px;"
+          style="padding-left: 12px; padding-right: 12px;"
         >
           <div
             class="qixian-row qixian-form-item"
@@ -255,7 +254,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
         </div>
         <div
           class="qixian-col qixian-col-8 qixian-col-offset-8"
-          style="padding-left: 8px; padding-right: 8px; text-align: right;"
+          style="padding-left: 12px; padding-right: 12px; text-align: right;"
         >
           <div
             class="qixian-row qixian-form-item pro-form-query-filter-actions"
@@ -281,7 +280,6 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                 >
                   <div
                     class="qixian-space qixian-space-horizontal qixian-space-align-center"
-                    style="padding-top: 0px; margin-bottom: 24px;"
                   >
                     <div
                       class="qixian-space-item"
@@ -340,7 +338,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
           class="qixian-pro-table-list-toolbar-container"
         >
           <div
-            class="qixian-space qixian-space-horizontal qixian-space-align-center qixian-pro-table-list-toolbar-left"
+            class="qixian-pro-table-list-toolbar-left"
           />
           <div
             class="qixian-space qixian-space-horizontal qixian-space-align-center qixian-pro-table-list-toolbar-right"
@@ -353,7 +351,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
               >
                 <div
                   class="qixian-space-item"
-                  style="margin-right: 16px;"
+                  style="margin-right: 12px;"
                 >
                   <div
                     class="qixian-pro-table-list-toolbar-setting-item"
@@ -383,7 +381,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                 </div>
                 <div
                   class="qixian-space-item"
-                  style="margin-right: 16px;"
+                  style="margin-right: 12px;"
                 >
                   <div
                     class="qixian-pro-table-list-toolbar-setting-item"
@@ -487,7 +485,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 0
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -495,7 +495,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 1
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -503,7 +505,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 2
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -511,7 +515,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 3
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -519,7 +525,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 4
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -527,7 +535,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 5
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -535,7 +545,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 6
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -543,7 +555,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 7
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -551,7 +565,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 8
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -559,7 +575,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 9
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -567,7 +585,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 10
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -575,7 +595,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 11
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -583,7 +605,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 12
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -591,7 +615,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 13
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -599,7 +625,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 14
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -607,7 +635,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 15
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -615,7 +645,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 16
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -623,7 +655,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 17
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -631,7 +665,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 18
+                        </td>
                       </tr>
                       <tr
                         class="qixian-table-row qixian-table-row-level-0"
@@ -639,7 +675,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                       >
                         <td
                           class="qixian-table-cell"
-                        />
+                        >
+                          Edward King 19
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -658,7 +696,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
               <li
                 aria-disabled="true"
                 class="qixian-pagination-prev qixian-pagination-disabled"
-                title="Previous Page"
+                title="上一页"
               >
                 <button
                   class="qixian-pagination-item-link"
@@ -745,7 +783,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
               <li
                 class="qixian-pagination-jump-next qixian-pagination-jump-next-custom-icon"
                 tabindex="0"
-                title="Next 5 Pages"
+                title="向后 5 页"
               >
                 <a
                   class="qixian-pagination-item-link"
@@ -795,7 +833,7 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                 aria-disabled="false"
                 class="qixian-pagination-next"
                 tabindex="0"
-                title="Next Page"
+                title="下一页"
               >
                 <button
                   class="qixian-pagination-item-link"
@@ -854,9 +892,9 @@ exports[`Table ColumnSetting 🎏 config provide render 1`] = `
                     </span>
                     <span
                       class="qixian-select-selection-item"
-                      title="20 / page"
+                      title="20 条/页"
                     >
-                      20 / page
+                      20 条/页
                     </span>
                   </div>
                   <span

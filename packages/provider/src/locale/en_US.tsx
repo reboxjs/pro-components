@@ -53,4 +53,15 @@ export default {
     prev: 'Previous',
     submit: 'Finish',
   },
+  editableTable: {
+    action: {
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+    },
+  },
+  switch: {
+    open: 'open',
+    close: 'close',
+  },
 };

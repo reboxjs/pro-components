@@ -1,27 +1,35 @@
 import React from 'react';
-
-import ProField, { ProFieldValueType } from '@ant-design/pro-field';
-import { InputProps } from 'antd/lib/input';
-import { SelectProps } from 'antd/lib/select';
-import { ProSchema } from '@ant-design/pro-utils';
+import ProField from '@ant-design/pro-field';
+import type { InputProps, SelectProps } from 'antd';
+import type { ProSchema } from '@ant-design/pro-utils';
+import { runFunction } from '@ant-design/pro-utils';
 
 import createField from '../../BaseForm/createField';
-import { ProFormItemProps } from '../../interface';
+import type { ProFormItemProps } from '../../interface';
 
-export type ProFormFieldProps = ProSchema<
-  string,
-  ProFieldValueType,
+export type ProFormFieldProps<T = any> = ProSchema<
+  T,
   ProFormItemProps<InputProps & SelectProps<string>> & {
+    mode?: 'edit' | 'read' | 'update';
     // 用来判断是不是被嵌套渲染的 dom
     isDefaultDom?: boolean;
     ref?: any;
-  }
+    plain?: boolean;
+    text?: any;
+  },
+  any,
+  any
 >;
 /**
  * 最普通的 Text 组件
+ *
  * @param
  */
-const ProFormField = React.forwardRef<any, ProFormFieldProps>(
+const ProFormField: React.FC<
+  ProFormFieldProps<any> & {
+    onChange?: Function;
+  }
+> = React.forwardRef(
   (
     {
       fieldProps,
@@ -34,6 +42,9 @@ const ProFormField = React.forwardRef<any, ProFormFieldProps>(
       renderFormItem,
       valueType,
       initialValue,
+      onChange,
+      valueEnum,
+      name,
       ...restProps
     },
     ref,
@@ -43,20 +54,34 @@ const ProFormField = React.forwardRef<any, ProFormFieldProps>(
       if (React.isValidElement(children)) {
         return React.cloneElement(children, {
           ...restProps,
+          onChange: (...restParams: any) => {
+            (fieldProps?.onChange as any)?.(...restParams);
+            onChange?.(...restParams);
+          },
           ...children.props,
         });
       }
       return children as JSX.Element;
     }
+
     return (
       <ProField
+        ref={ref}
         text={fieldProps?.value as string}
         mode="edit"
+        render={render as any}
+        renderFormItem={renderFormItem as any}
         valueType={(valueType as 'text') || 'text'}
-        fieldProps={fieldProps}
+        fieldProps={{
+          ...fieldProps,
+          onChange: (...restParams: any) => {
+            (fieldProps?.onChange as any)?.(...restParams);
+            onChange?.(...restParams);
+          },
+        }}
+        valueEnum={runFunction(valueEnum)}
         {...proFieldProps}
         {...restProps}
-        ref={ref}
       />
     );
   },

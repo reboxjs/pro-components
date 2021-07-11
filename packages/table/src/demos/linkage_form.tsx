@@ -2,21 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import { Button, Input, Select } from 'antd';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-table';
+import ProTable from '@ant-design/pro-table';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   key: number;
   name: string;
   createdAt: number;
-}
+};
 
 const MySelect: React.FC<{
   state: {
     type: number;
   };
-  /**
-   * value 和 onChange 会被自动注入
-   */
+  /** Value 和 onChange 会被自动注入 */
   value?: string;
   onChange?: (value: string) => void;
 }> = (props) => {
@@ -69,32 +68,29 @@ export default () => {
     {
       title: '标题',
       dataIndex: 'name',
-      search: false,
     },
     {
       title: '状态',
       dataIndex: 'state',
       initialValue: 1,
       valueType: 'select',
-      fieldProps: {
-        options: [
-          {
-            label: '月份',
-            value: 1,
-          },
-          {
-            label: '周',
-            value: 2,
-          },
-          {
-            label: '自定义',
-            value: 3,
-          },
-        ],
-      },
+      request: async () => [
+        {
+          label: '月份',
+          value: 1,
+        },
+        {
+          label: '周',
+          value: 2,
+        },
+        {
+          label: '自定义',
+          value: 3,
+        },
+      ],
     },
     {
-      title: '动态',
+      title: '动态表单',
       key: 'direction',
       hideInTable: true,
       dataIndex: 'direction',
@@ -121,7 +117,8 @@ export default () => {
   return (
     <ProTable<GithubIssueItem>
       columns={columns}
-      request={async () => {
+      request={async (params) => {
+        console.log(`request params:`, params);
         return {
           data: [
             {
@@ -140,24 +137,8 @@ export default () => {
       headerTitle="动态自定义搜索栏"
       search={{
         defaultCollapsed: false,
-        optionRender: ({ searchText, resetText }, { form }) => [
-          <Button
-            key="search"
-            type="primary"
-            onClick={() => {
-              form?.submit();
-            }}
-          >
-            {searchText}
-          </Button>,
-          <Button
-            key="rest"
-            onClick={() => {
-              form?.resetFields();
-            }}
-          >
-            {resetText}
-          </Button>,
+        optionRender: (searchConfig, formProps, dom) => [
+          ...dom.reverse(),
           <Button key="out">导出</Button>,
         ],
       }}

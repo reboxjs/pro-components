@@ -1,82 +1,87 @@
-import React, { useRef, useCallback, useState, useEffect, useContext } from 'react';
+import React, { useRef, useCallback, useEffect, useContext, useImperativeHandle } from 'react';
+import type { StepsProps, FormInstance } from 'antd';
 import { Form, Steps, ConfigProvider, Button, Space } from 'antd';
 import toArray from 'rc-util/lib/Children/toArray';
-import { FormProviderProps } from 'antd/lib/form/context';
+import type { FormProviderProps } from 'antd/lib/form/context';
 import useMergedState from 'rc-util/lib/hooks/useMergedState';
-import { StepsProps } from 'antd/lib/steps';
 import classNames from 'classnames';
-import { FormInstance } from 'antd/lib/form';
-import { ButtonProps } from 'antd/lib/button';
-import { useIntl } from '@ant-design/pro-provider';
+import { ConfigProviderWrap, useIntl } from '@ant-design/pro-provider';
+import { useMountMergeState } from '@ant-design/pro-utils';
 
-import StepForm, { StepFormProps } from './StepForm';
+import type { StepFormProps } from './StepForm';
+import StepForm from './StepForm';
 import './index.less';
-import { ProFormProps } from '../ProForm';
-import { CommonFormProps } from '../../BaseForm';
+import type { ProFormProps } from '../ProForm';
+import type { SubmitterProps } from '../../components/Submitter';
+import merge from 'lodash.merge';
 
-type Store = {
-  [name: string]: any;
-};
-
-interface StepsFormProps<T = Store> extends FormProviderProps {
+type StepsFormProps<T = Record<string, any>> = {
   /**
+   * 返回 true 会重置步数，并且清空表单
+   *
    * @name 提交方法
-   * @description 返回 true 会重置步数，并且清空表单
    */
   onFinish?: (values: T) => Promise<boolean | void>;
   current?: number;
   stepsProps?: StepsProps;
-  formProps?: ProFormProps;
+  formProps?: ProFormProps<T>;
   onCurrentChange?: (current: number) => void;
-  /**
-   * 自定义步骤器
-   */
+  /** 自定义步骤器 */
   stepsRender?: (
-    steps: Array<{
+    steps: {
       key: string;
       title?: React.ReactNode;
-    }>,
+    }[],
     defaultDom: React.ReactNode,
   ) => React.ReactNode;
-
+  /** @name 当前展示表单的 formRef */
+  formRef?: React.MutableRefObject<FormInstance<any> | undefined>;
+  /** @name 所有表单的 formMapRef */
+  formMapRef?: React.MutableRefObject<React.MutableRefObject<FormInstance<any> | undefined>[]>;
   /**
    * 自定义单个表单
-   * @param form from 的 dom，可以放置到别的位置
+   *
+   * @param form From 的 dom，可以放置到别的位置
    */
   stepFormRender?: (from: React.ReactNode) => React.ReactNode;
 
   /**
    * 自定义整个表单区域
-   * @param form from 的 dom，可以放置到别的位置
+   *
+   * @param form From 的 dom，可以放置到别的位置
    * @param submitter 操作按钮
    */
   stepsFormRender?: (from: React.ReactNode, submitter: React.ReactNode) => React.ReactNode;
-  /**
-   * 按钮的统一配置，优先级低于分布表单的配置
-   */
-  submitter?: CommonFormProps['submitter'];
-}
+  /** 按钮的统一配置，优先级低于分步表单的配置 */
+  submitter?:
+    | SubmitterProps<{
+        step: number;
+        onPre: () => void;
+        form?: FormInstance<any>;
+      }>
+    | false;
+
+  containerStyle?: React.CSSProperties;
+} & FormProviderProps;
 
 export const StepsFormProvide = React.createContext<
   | {
       unRegForm: (name: string) => void;
       onFormFinish: (name: string, formData: any) => void;
       keyArray: string[];
-      formArrayRef: React.MutableRefObject<
-        Array<React.MutableRefObject<FormInstance<any> | undefined>>
-      >;
-      loading: ButtonProps['loading'];
-      setLoading: React.Dispatch<React.SetStateAction<ButtonProps['loading']>>;
+      formArrayRef: React.MutableRefObject<React.MutableRefObject<FormInstance<any> | undefined>[]>;
+      loading: boolean;
+      setLoading: (loading: boolean) => void;
       formMapRef: React.MutableRefObject<Map<string, StepFormProps>>;
       next: () => void;
     }
   | undefined
 >(undefined);
-
-const StepsForm: React.FC<StepsFormProps> & {
-  StepForm: typeof StepForm;
-  useForm: typeof Form.useForm;
-} = (props) => {
+function StepsForm<T = Record<string, any>>(
+  props: StepsFormProps<T> & {
+    children: any;
+  },
+) {
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
   const prefixCls = getPrefixCls('pro-steps-form');
 
@@ -90,50 +95,48 @@ const StepsForm: React.FC<StepsFormProps> & {
     stepsProps,
     onFinish,
     formProps,
+    containerStyle,
+    formRef,
+    formMapRef: propsFormMapRef,
     ...rest
   } = props;
-
-  const formDataRef = useRef(new Map<string, Store>());
+  const formDataRef = useRef(new Map<string, Record<string, any>>());
   const formMapRef = useRef(new Map<string, StepFormProps>());
-  const formArrayRef = useRef<Array<React.MutableRefObject<FormInstance<any> | undefined>>>([]);
-  const [formArray, setFormArray] = useState<string[]>([]);
-  const [loading, setLoading] = useState<ButtonProps['loading']>(false);
+  const formArrayRef = useRef<React.MutableRefObject<FormInstance<any> | undefined>[]>([]);
+  const [formArray, setFormArray] = useMountMergeState<string[]>([]);
+  const [loading, setLoading] = useMountMergeState<boolean>(false);
   const intl = useIntl();
 
-  /**
-   * 受控的方式来操作表单
-   */
+  /** 受控的方式来操作表单 */
   const [step, setStep] = useMergedState<number>(0, {
     value: props.current,
     onChange: props.onCurrentChange,
   });
 
-  /**
-   * 注册一个form进入，方便进行 props 的修改
-   */
+  /** 注册一个form进入，方便进行 props 的修改 */
   const regForm = useCallback((name: string, childrenFormProps: StepFormProps) => {
     formMapRef.current.set(name, childrenFormProps);
   }, []);
 
-  /**
-   * 接触挂载掉这个 form，同时步数 -1
-   */
+  /** 接触挂载掉这个 form，同时步数 -1 */
   const unRegForm = useCallback((name: string) => {
     formMapRef.current.delete(name);
     formDataRef.current.delete(name);
   }, []);
 
-  /**
-   * children 计算完成之后，重新生成一下当前的步骤列表
-   */
+  /** Children 计算完成之后，重新生成一下当前的步骤列表 */
   useEffect(() => {
     setFormArray(Array.from(formMapRef.current.keys()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Array.from(formMapRef.current.keys()).join(',')]);
 
-  /**
-   * proForm处理了一下 from 的数据，在其中做了一些操作
-   * 如果使用 Provider 自带的，自带的数据处理就无法生效了
-   */
+  const currentFormRef = formArrayRef.current[step || 0]?.current;
+
+  useImperativeHandle(propsFormMapRef, () => formArrayRef.current);
+
+  useImperativeHandle(formRef, () => currentFormRef);
+
+  /** ProForm处理了一下 from 的数据，在其中做了一些操作 如果使用 Provider 自带的，自带的数据处理就无法生效了 */
   const onFormFinish = useCallback(
     async (name: string, formData: any) => {
       formDataRef.current.set(name, formData);
@@ -143,21 +146,23 @@ const StepsForm: React.FC<StepsFormProps> & {
           return;
         }
         setLoading(true);
-        const values = Array.from(formDataRef.current.values()).reduce((pre, cur) => {
-          return {
-            ...pre,
-            ...cur,
-          };
-        }, {});
-        const success = await props.onFinish(values);
-        if (success) {
-          setStep(0);
-          formArrayRef.current.forEach((form) => form.current?.resetFields());
+        const values: any = merge({}, ...Array.from(formDataRef.current.values()));
+        try {
+          const success = await props.onFinish(values);
+          if (success) {
+            setStep(0);
+            formArrayRef.current.forEach((form) => form.current?.resetFields());
+          }
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.log(error);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       }
     },
-    [step],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props, step],
   );
 
   const stepsDom = (
@@ -180,7 +185,6 @@ const StepsForm: React.FC<StepsFormProps> & {
     const from = formArrayRef.current[step];
     from.current?.submit();
   };
-
   const next = submitter !== false && (
     <Button
       key="next"
@@ -240,9 +244,10 @@ const StepsForm: React.FC<StepsFormProps> & {
     const submitterDom = getActionButton();
     if (submitter && submitter.render) {
       const submitterProps: any = {
-        form: formArrayRef.current[step],
+        form: formArrayRef.current[step]?.current,
         onSubmit,
-        onReset: () => {
+        step,
+        onPre: () => {
           if (step < 1) {
             return;
           }
@@ -261,9 +266,7 @@ const StepsForm: React.FC<StepsFormProps> & {
     const itemProps = item.props as StepFormProps;
     const name = itemProps.name || `${index}`;
     regForm(name, itemProps);
-    /**
-     * 是否是当前的表单
-     */
+    /** 是否是当前的表单 */
     const isShow = step === index;
 
     const config = isShow
@@ -326,14 +329,16 @@ const StepsForm: React.FC<StepsFormProps> & {
             stepsFormRender(
               <>
                 {finalStepsDom}
-                <div className={`${prefixCls}-container`}>{formDom}</div>
+                <div className={`${prefixCls}-container`} style={containerStyle}>
+                  {formDom}
+                </div>
               </>,
               submitterDom,
             )
           ) : (
             <>
               {finalStepsDom}
-              <div className={`${prefixCls}-container`}>
+              <div className={`${prefixCls}-container`} style={containerStyle}>
                 {formDom}
                 <Space>{renderSubmitter()}</Space>
               </div>
@@ -343,11 +348,23 @@ const StepsForm: React.FC<StepsFormProps> & {
       </Form.Provider>
     </div>
   );
-};
-
-StepsForm.StepForm = StepForm;
-StepsForm.useForm = Form.useForm;
+}
 
 export type { StepFormProps, StepsFormProps };
 
-export default StepsForm;
+function StepsFormWarp<T = Record<string, any>>(
+  props: StepsFormProps<T> & {
+    children: any;
+  },
+) {
+  return (
+    <ConfigProviderWrap>
+      <StepsForm<T> {...props} />
+    </ConfigProviderWrap>
+  );
+}
+
+StepsFormWarp.StepForm = StepForm;
+StepsFormWarp.useForm = Form.useForm;
+
+export default StepsFormWarp;

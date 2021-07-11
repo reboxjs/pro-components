@@ -48,4 +48,15 @@ export default {
     densityMiddle: '中等',
     densitySmall: '紧凑',
   },
+  editableTable: {
+    action: {
+      save: '保存',
+      cancel: '取消',
+      delete: '删除',
+    },
+  },
+  switch: {
+    open: '打开',
+    close: '关闭',
+  },
 };

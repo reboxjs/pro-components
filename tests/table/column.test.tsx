@@ -4,6 +4,7 @@ import { ConfigProvider } from 'antd';
 import ProTable from '@ant-design/pro-table';
 import { request } from './demo';
 import { waitForComponentToPaint } from '../util';
+import moment from 'moment';
 
 describe('Table ColumnSetting', () => {
   it('🎏 render', async () => {
@@ -23,13 +24,51 @@ describe('Table ColumnSetting', () => {
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(callBack).toBeCalled();
     expect(callBack).toBeCalledWith('Edward King 0');
   });
 
-  it('🎏 config provide render', async () => {
+  it('🎏 query should parse by valueType', async () => {
     const callBack = jest.fn();
+    const html = mount(
+      <ProTable
+        size="small"
+        columns={[
+          {
+            title: 'date',
+            key: 'date',
+            dataIndex: 'date',
+            valueType: 'date',
+          },
+        ]}
+        form={{
+          initialValues: {
+            date: moment(),
+          },
+        }}
+        request={async (params) => {
+          console.log(params);
+          callBack(params.date);
+          return {
+            data: [
+              {
+                key: '1',
+                date: moment(),
+              },
+            ],
+            success: true,
+          };
+        }}
+        rowKey="key"
+      />,
+    );
+    await waitForComponentToPaint(html, 1000);
+    expect(callBack).toBeCalled();
+    expect(callBack).toBeCalledWith('2016-11-22');
+  });
+
+  it('🎏 config provide render', async () => {
     const html = mount(
       <ConfigProvider prefixCls="qixian">
         <ProTable
@@ -39,7 +78,6 @@ describe('Table ColumnSetting', () => {
               title: 'Name',
               key: 'name',
               dataIndex: 'name',
-              render: (text) => callBack(text),
             },
           ]}
           request={request}
@@ -47,7 +85,7 @@ describe('Table ColumnSetting', () => {
         />
       </ConfigProvider>,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(html.render()).toMatchSnapshot();
   });
 
@@ -63,12 +101,18 @@ describe('Table ColumnSetting', () => {
             dataIndex: 'name',
             renderText: (text) => callBack(text),
           },
+          {
+            title: 'Name2',
+            key: 'name2',
+            dataIndex: 'name2',
+            valueType: false,
+          },
         ]}
         request={request}
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(callBack).toBeCalled();
     expect(callBack).toBeCalledWith('Edward King 0');
   });
@@ -90,7 +134,7 @@ describe('Table ColumnSetting', () => {
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
     expect(html.find('td.ant-table-cell')).toMatchSnapshot();
   });
 });
