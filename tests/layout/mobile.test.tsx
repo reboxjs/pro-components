@@ -1,9 +1,8 @@
-﻿import { mount, render } from 'enzyme';
-import React from 'react';
-import BasicLayout from '@ant-design/pro-layout';
-import defaultProps from './defaultProps';
-
+﻿import { ProLayout } from '@ant-design/pro-layout';
+import { render as reactRender, render } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import { waitForComponentToPaint } from '../util';
+import defaultProps from './defaultProps';
 
 describe('mobile BasicLayout', () => {
   beforeAll(() => {
@@ -29,30 +28,25 @@ describe('mobile BasicLayout', () => {
   });
 
   it('📱 base use', async () => {
-    const html = render(
-      <BasicLayout {...defaultProps} getContainer={false} onCollapse={() => {}} />,
-    );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    const html = render(<ProLayout {...defaultProps} getContainer={false} onCollapse={() => {}} />);
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 collapsed=false', async () => {
-    const html = render(<BasicLayout {...defaultProps} getContainer={false} collapsed={false} />);
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    const html = render(<ProLayout {...defaultProps} getContainer={false} collapsed={false} />);
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout=mix', async () => {
     const html = render(
-      <BasicLayout {...defaultProps} getContainer={false} layout="mix" collapsed={false} />,
+      <ProLayout {...defaultProps} getContainer={false} layout="mix" collapsed={false} />,
     );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout=mix and splitMenus', async () => {
     const html = render(
-      <BasicLayout
+      <ProLayout
         {...defaultProps}
         splitMenus
         getContainer={false}
@@ -60,13 +54,12 @@ describe('mobile BasicLayout', () => {
         collapsed={false}
       />,
     );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout menuHeaderRender=false', async () => {
     const html = render(
-      <BasicLayout
+      <ProLayout
         {...defaultProps}
         collapsed
         getContainer={false}
@@ -74,13 +67,12 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={false}
       />,
     );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout menuHeaderRender', async () => {
     const html = render(
-      <BasicLayout
+      <ProLayout
         {...defaultProps}
         collapsed
         getContainer={false}
@@ -88,13 +80,12 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={() => 'title'}
       />,
     );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout menuHeaderRender', async () => {
     const html = render(
-      <BasicLayout
+      <ProLayout
         {...defaultProps}
         collapsed
         getContainer={false}
@@ -102,17 +93,16 @@ describe('mobile BasicLayout', () => {
         menuHeaderRender={() => 'title'}
       />,
     );
-    waitForComponentToPaint(html);
-    expect(html).toMatchSnapshot();
+    expect(html.asFragment()).toMatchSnapshot();
   });
 
   it('📱 layout collapsedButtonRender', async () => {
     const onCollapse = jest.fn();
-    const html = mount(
-      <BasicLayout
+    const html = reactRender(
+      <ProLayout
         {...defaultProps}
         onCollapse={onCollapse}
-        collapsed
+        collapsed={false}
         collapsedButtonRender={() => {
           return 'div';
         }}
@@ -122,9 +112,19 @@ describe('mobile BasicLayout', () => {
     );
 
     waitForComponentToPaint(html);
-
-    html.find('span.ant-pro-global-header-collapsed-button').simulate('click');
+    act(() => {
+      html.baseElement
+        ?.querySelector<HTMLSpanElement>('span.ant-pro-global-header-collapsed-button')
+        ?.click();
+    });
+    waitForComponentToPaint(html);
+    act(() => {
+      html.baseElement?.querySelector<HTMLDivElement>('div.ant-drawer-mask')?.click();
+    });
+    waitForComponentToPaint(html);
     expect(onCollapse).toHaveBeenCalled();
+
+    waitForComponentToPaint(html);
     html.unmount();
   });
 });

@@ -1,5 +1,13 @@
 export default {
   moneySymbol: 'R$',
+  form: {
+    lightFilter: {
+      more: 'Mais',
+      clear: 'Limpar',
+      confirm: 'Confirmar',
+      itemUnit: 'Itens',
+    },
+  },
   tableForm: {
     search: 'Filtrar',
     reset: 'Limpar',
@@ -18,7 +26,7 @@ export default {
     total: {
       range: ' ',
       total: 'de',
-      item: 'items',
+      item: 'itens',
     },
   },
   tableToolBar: {
@@ -39,5 +47,25 @@ export default {
     densityLarger: 'Largo',
     densityMiddle: 'Médio',
     densitySmall: 'Compacto',
+  },
+  stepsForm: {
+    next: 'Próximo',
+    prev: 'Anterior',
+    submit: 'Enviar',
+  },
+  loginForm: {
+    submitText: 'Entrar',
+  },
+  editableTable: {
+    action: {
+      save: 'Salvar',
+      cancel: 'Cancelar',
+      delete: 'Apagar',
+      add: 'adicionar uma linha de dados',
+    },
+  },
+  switch: {
+    open: 'abrir',
+    close: 'fechar',
   },
 };

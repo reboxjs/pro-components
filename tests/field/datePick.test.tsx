@@ -1,9 +1,10 @@
-import { mount } from 'enzyme';
-import React from 'react';
-import { act } from 'react-test-renderer';
 import Field from '@ant-design/pro-field';
-import moment from 'moment';
-import { waitTime } from '../util';
+import '@testing-library/jest-dom';
+import { render } from '@testing-library/react';
+import dayjs from 'dayjs';
+import { mount } from 'enzyme';
+import { act } from 'react-dom/test-utils';
+import { waitForComponentToPaint } from '../util';
 
 describe('Field', () => {
   const datePickList = ['date', 'dateWeek', 'dateMonth', 'dateQuarter', 'dateYear', 'dateTime'];
@@ -14,7 +15,7 @@ describe('Field', () => {
         <Field
           mode="edit"
           fieldProps={{
-            value: moment(),
+            value: dayjs(),
           }}
           onChange={fn}
           text="100"
@@ -26,13 +27,33 @@ describe('Field', () => {
         html.find('.ant-pro-core-field-label').simulate('mousedown');
       });
 
-      await waitTime(100);
+      await waitForComponentToPaint(html, 100);
 
       act(() => {
         html.find('.anticon-close').simulate('click');
       });
-
+      await waitForComponentToPaint(html, 100);
       expect(fn).toBeCalled();
     });
+  });
+
+  it(`📅  RangePicker support format is function`, async () => {
+    const fn = jest.fn();
+    const html = render(
+      <Field
+        mode="read"
+        fieldProps={{
+          format: () => 'YYYY-MM-DD HH:mm:ss',
+        }}
+        onChange={fn}
+        text={[dayjs(), dayjs().add(1, 'd')]}
+        light
+        valueType="dateRange"
+      />,
+    );
+
+    expect(html.baseElement.innerHTML).toBe(
+      '<div><div><div>2016-11-22 15:22:44</div><div>2016-11-23 15:22:44</div></div></div>',
+    );
   });
 });

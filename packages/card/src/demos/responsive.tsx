@@ -1,10 +1,9 @@
-import React from 'react';
-import ProCard from '@ant-design/pro-card';
+import { ProCard } from '@ant-design/pro-components';
 
 export default () => {
   return (
     <>
-      <ProCard style={{ marginTop: 8 }} gutter={8} title="24栅格">
+      <ProCard style={{ marginBlockStart: 8 }} gutter={8} title="24栅格">
         <ProCard colSpan={{ xs: 2, sm: 4, md: 6, lg: 8, xl: 10 }} layout="center" bordered>
           Col
         </ProCard>
@@ -15,7 +14,7 @@ export default () => {
           Col
         </ProCard>
       </ProCard>
-      <ProCard style={{ marginTop: 8 }} gutter={8} title="指定宽度px">
+      <ProCard style={{ marginBlockStart: 8 }} gutter={8} title="指定宽度px">
         <ProCard
           colSpan={{
             xs: '50px',
@@ -34,7 +33,7 @@ export default () => {
         </ProCard>
       </ProCard>
 
-      <ProCard style={{ marginTop: 8 }} gutter={8} title="指定宽度百分比">
+      <ProCard style={{ marginBlockStart: 8 }} gutter={8} title="指定宽度百分比">
         <ProCard layout="center" bordered>
           Auto
         </ProCard>

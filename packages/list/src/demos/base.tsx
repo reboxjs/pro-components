@@ -1,6 +1,5 @@
-import React from 'react';
-import { Button, Tag, Space } from 'antd';
-import ProList from '@ant-design/pro-list';
+import { ProList } from '@ant-design/pro-components';
+import { Button, Space, Tag } from 'antd';
 
 const dataSource = [
   {
@@ -33,15 +32,27 @@ export default () => (
   <ProList<any>
     toolBarRender={() => {
       return [
-        <Button key="3" type="primary">
+        <Button key="add" type="primary">
           新建
         </Button>,
       ];
     }}
+    onRow={(record: any) => {
+      return {
+        onMouseEnter: () => {
+          console.log(record);
+        },
+        onClick: () => {
+          console.log(record);
+        },
+      };
+    }}
     rowKey="name"
     headerTitle="基础列表"
+    tooltip="基础列表的配置"
     dataSource={dataSource}
     showActions="hover"
+    showExtra="hover"
     metas={{
       title: {
         dataIndex: 'name',

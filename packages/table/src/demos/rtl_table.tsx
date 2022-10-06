@@ -1,12 +1,12 @@
-import React, { useRef } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Tag, Space, ConfigProvider } from 'antd';
-import ProTable, { ProColumns, TableDropdown, ActionType } from '@ant-design/pro-table';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable, TableDropdown } from '@ant-design/pro-components';
+import { Button, ConfigProvider, Space, Tag } from 'antd';
+import arEGIntl from 'antd/es/locale/ar_EG';
+import { useRef } from 'react';
 import request from 'umi-request';
 
-import arEGIntl from 'antd/lib/locale/ar_EG';
-
-interface GithubIssueItem {
+type GithubIssueItem = {
   url: string;
   id: number;
   number: number;
@@ -20,7 +20,7 @@ interface GithubIssueItem {
   created_at: string;
   updated_at: string;
   closed_at?: string;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
@@ -50,6 +50,7 @@ const columns: ProColumns<GithubIssueItem>[] = [
     dataIndex: 'state',
     initialValue: 'open',
     filters: true,
+    onFilter: true,
     valueEnum: {
       all: { text: 'الكل', status: 'Default' },
       open: {
@@ -69,9 +70,9 @@ const columns: ProColumns<GithubIssueItem>[] = [
   {
     title: 'التسمية',
     dataIndex: 'labels',
-    render: (_, row) => (
+    render: (_, record) => (
       <Space>
-        {row.labels.map(({ name, color }) => (
+        {record.labels.map(({ name, color }) => (
           <Tag color={color} key={name}>
             {name}
           </Tag>
@@ -80,24 +81,18 @@ const columns: ProColumns<GithubIssueItem>[] = [
     ),
   },
   {
-    title: 'تاريخ الإنشاء',
-    key: 'since',
-    dataIndex: 'created_at',
-    valueType: 'date',
-  },
-  {
     title: 'التشغيل',
     valueType: 'option',
-    render: (text, row, _, action) => [
-      <a href={row.url} target="_blank" rel="noopener noreferrer" key="link">
+    render: (text, record, _, action) => [
+      <a href={record.url} target="_blank" rel="noopener noreferrer" key="link">
         رابط
       </a>,
-      <a href={row.url} target="_blank" rel="noopener noreferrer" key="view">
+      <a href={record.url} target="_blank" rel="noopener noreferrer" key="view">
         查看
       </a>,
       <TableDropdown
         key="actionGroup"
-        onSelect={() => action.reload()}
+        onSelect={() => action?.reload()}
         menus={[
           { key: 'copy', name: 'نسخ' },
           { key: 'delete', name: 'حذف' },

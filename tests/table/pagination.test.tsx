@@ -1,44 +1,15 @@
-import { mount } from 'enzyme';
-import React from 'react';
+import ProTable, { TableDropdown } from '@ant-design/pro-table';
+import '@testing-library/jest-dom';
+import { fireEvent, render } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
-import ProTable from '@ant-design/pro-table';
+import { waitForComponentToPaint, waitTime } from '../util';
 import { request } from './demo';
-import { waitForComponentToPaint } from '../util';
 
-describe('BasicTable', () => {
-  const LINE_STR_COUNT = 20;
-  // Mock offsetHeight
-  // @ts-expect-error
-  const originOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight')
-    .get;
-  Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-    get() {
-      let html = this.innerHTML;
-      html = html.replace(/<[^>]*>/g, '');
-      const lines = Math.ceil(html.length / LINE_STR_COUNT);
-      return lines * 16;
-    },
-  });
-
-  // Mock getComputedStyle
-  const originGetComputedStyle = window.getComputedStyle;
-  window.getComputedStyle = (ele) => {
-    const style = originGetComputedStyle(ele);
-    style.lineHeight = '16px';
-    return style;
-  };
-
-  afterAll(() => {
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-      get: originOffsetHeight,
-    });
-    window.getComputedStyle = originGetComputedStyle;
-  });
-
+describe('BasicTable pagination', () => {
   it('🎏 pagination current test', async () => {
     const fn = jest.fn();
     const onChangeFn = jest.fn();
-    const html = mount(
+    const html = render(
       <ProTable
         size="small"
         columns={[
@@ -49,7 +20,10 @@ describe('BasicTable', () => {
         ]}
         request={(params) => {
           fn(params.current);
-          return request(params);
+          return request({
+            pageSize: 10,
+            current: 1,
+          });
         }}
         pagination={{
           onChange: onChangeFn(),
@@ -58,14 +32,14 @@ describe('BasicTable', () => {
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
 
     expect(fn).toBeCalledWith(1);
 
-    act(() => {
-      html.find('li.ant-pagination-item.ant-pagination-item-2').simulate('click');
+    await act(async () => {
+      (await html.findByText('2'))?.click();
     });
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 200);
 
     expect(fn).toBeCalledWith(1);
   });
@@ -73,7 +47,7 @@ describe('BasicTable', () => {
   it('🎏 pagination pageSize test ', async () => {
     const fn = jest.fn();
     const currentFn = jest.fn();
-    const html = mount(
+    const html = render(
       <ProTable
         size="small"
         columns={[
@@ -85,7 +59,10 @@ describe('BasicTable', () => {
         request={(params) => {
           fn(params.pageSize);
           currentFn(params.current);
-          return request(params);
+          return request({
+            pageSize: 10,
+            current: 1,
+          });
         }}
         pagination={{
           pageSize: 50,
@@ -94,18 +71,37 @@ describe('BasicTable', () => {
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
 
     expect(fn).toBeCalledWith(50);
     expect(currentFn).toBeCalledWith(1);
-
-    html.setProps({
-      pagination: {
-        pageSize: 10,
-      },
+    act(() => {
+      html.rerender(
+        <ProTable
+          size="small"
+          columns={[
+            {
+              dataIndex: 'money',
+              valueType: 'money',
+            },
+          ]}
+          request={(params) => {
+            fn(params.pageSize);
+            currentFn(params.current);
+            return request({
+              pageSize: 10,
+              current: 1,
+            });
+          }}
+          pagination={{
+            pageSize: 10,
+          }}
+          onRequestError={fn}
+          rowKey="key"
+        />,
+      );
     });
-
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 200);
 
     expect(fn).toBeCalledWith(10);
   });
@@ -113,7 +109,7 @@ describe('BasicTable', () => {
   it('🎏 pagination current', async () => {
     const fn = jest.fn();
     const pageSizeFn = jest.fn();
-    const html = mount(
+    const html = render(
       <ProTable
         size="small"
         columns={[
@@ -134,26 +130,43 @@ describe('BasicTable', () => {
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
 
     expect(fn).toBeCalledWith(2);
 
     expect(pageSizeFn).toBeCalledWith(20);
-
-    html.setProps({
-      pagination: {
-        current: 3,
-      },
+    act(() => {
+      html.rerender(
+        <ProTable
+          size="small"
+          columns={[
+            {
+              dataIndex: 'money',
+              valueType: 'money',
+            },
+          ]}
+          request={(params) => {
+            fn(params.current);
+            pageSizeFn(params.pageSize);
+            return request(params);
+          }}
+          pagination={{
+            current: 3,
+          }}
+          onRequestError={fn}
+          rowKey="key"
+        />,
+      );
     });
 
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
 
     expect(fn).toBeCalledWith(3);
   });
 
   it('🎏 pagination=false, do not have pageParams', async () => {
     const fn = jest.fn();
-    const html = mount(
+    const html = render(
       <ProTable
         size="small"
         columns={[
@@ -164,25 +177,181 @@ describe('BasicTable', () => {
         ]}
         request={(params) => {
           fn(params.pageSize);
-          return request(params);
+          return request({
+            pageSize: 10,
+            current: 1,
+          });
         }}
         pagination={false}
-        onRequestError={fn}
+        onRequestError={() => null}
         rowKey="key"
       />,
     );
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 1200);
 
     expect(fn).toBeCalledWith(undefined);
 
-    html.setProps({
-      pagination: {
-        pageSize: 10,
-      },
+    act(() => {
+      html.rerender(
+        <ProTable
+          size="small"
+          columns={[
+            {
+              dataIndex: 'money',
+              valueType: 'money',
+            },
+          ]}
+          request={(params) => {
+            fn(params.pageSize);
+            return request({
+              pageSize: 10,
+            });
+          }}
+          pagination={{
+            pageSize: 10,
+          }}
+          onRequestError={() => null}
+          rowKey="key"
+        />,
+      );
     });
-
-    await waitForComponentToPaint(html, 1000);
+    await waitForComponentToPaint(html, 200);
 
     expect(fn).toBeCalledWith(10);
+  });
+
+  it('🎏 request call once when data.length more then pageSize', async () => {
+    const fn = jest.fn();
+    const html = render(
+      <ProTable<{
+        money: number;
+      }>
+        size="small"
+        columns={[
+          {
+            dataIndex: 'money',
+            valueType: 'money',
+          },
+        ]}
+        pagination={{
+          pageSize: 1,
+        }}
+        rowKey="key"
+        request={() => {
+          fn();
+          return new Promise((resolve) => {
+            resolve({
+              success: true,
+              total: 2,
+              data: [
+                {
+                  money: 1,
+                },
+                {
+                  money: 2,
+                },
+              ],
+            });
+          });
+        }}
+      />,
+    );
+    await waitForComponentToPaint(html, 1200);
+    act(() => {
+      html.queryByText('1')?.click();
+    });
+    await waitForComponentToPaint(html, 200);
+    expect(fn).toBeCalledTimes(1);
+  });
+
+  it('🎏 pagination was correct in controlled mode && params was in deep comparison', async () => {
+    const currentFn = jest.fn();
+    const html = render(
+      <ProTable
+        size="small"
+        columns={[
+          {
+            dataIndex: 'money',
+            valueType: 'money',
+          },
+        ]}
+        params={{}}
+        pagination={{
+          pageSize: 1,
+          onChange: (page) => {
+            currentFn(page);
+          },
+        }}
+        rowKey="key"
+        request={() => {
+          return request({
+            pageSize: 1,
+            current: 1,
+          });
+        }}
+      />,
+    );
+    await waitForComponentToPaint(html, 1200);
+    await act(async () => {
+      html.queryByText('2')?.click();
+    });
+
+    await act(async () => {
+      html.rerender(
+        <ProTable
+          size="small"
+          columns={[
+            {
+              dataIndex: 'money',
+              valueType: 'money',
+            },
+          ]}
+          params={{ name: '111' }}
+          pagination={{
+            pageSize: 1,
+            onChange: (page) => {
+              currentFn(page);
+            },
+          }}
+          rowKey="key"
+          request={() => {
+            return request({
+              pageSize: 1,
+              current: 1,
+            });
+          }}
+        />,
+      );
+    });
+    await waitForComponentToPaint(html, 200);
+    expect(currentFn).toBeCalledWith(2);
+  });
+});
+
+describe('TableDropdown', () => {
+  it('TableDropdown support onSelect', async () => {
+    const fn = jest.fn();
+    const html = render(
+      <TableDropdown
+        onSelect={fn}
+        key="actionGroup"
+        menus={[
+          { key: 'copy', name: '复制' },
+          { key: 'delete', name: '删除' },
+        ]}
+      />,
+    );
+
+    await act(async () => {
+      const button = await html.findByRole('img');
+      fireEvent.mouseEnter(button);
+    });
+    await waitTime(1000);
+    await act(async () => {
+      const button = await html.findByText('复制');
+      button.click();
+    });
+
+    expect(fn).toBeCalledWith('copy');
   });
 });

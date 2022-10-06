@@ -1,8 +1,10 @@
-import { Popconfirm, Space } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Dropdown, Menu, Popconfirm, Space } from 'antd';
 import React from 'react';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
 
-export interface Member {
+export type Member = {
   avatar: string;
   realName: string;
   nickName: string;
@@ -11,14 +13,15 @@ export interface Member {
   phone: string;
   role: RoleType;
   permission?: string[];
-}
+};
 
-export interface RoleMapType {
-  [propName: string]: {
+export type RoleMapType = Record<
+  string,
+  {
     name: string;
     desc: string;
-  };
-}
+  }
+>;
 
 export type RoleType = 'admin' | 'operator';
 
@@ -44,7 +47,7 @@ const permissions = [[], ['权限点名称1', '权限点名称4'], ['权限点�
 for (let i = 0; i < 5; i += 1) {
   tableListDataSource.push({
     outUserNo: `${102047 + i}`,
-    avatar: `//work.alibaba-inc.com/photo/${102047 + i}.32x32.jpg`,
+    avatar: 'https://gw.alipayobjects.com/zos/antfincdn/upvrAjAPQX/Logo_Tech%252520UI.svg',
     role: i === 0 ? 'admin' : 'operator',
     realName: realNames[i % 4],
     nickName: nickNames[i % 4],
@@ -54,9 +57,24 @@ for (let i = 0; i < 5; i += 1) {
   });
 }
 
+const roleMenu = (
+  <Menu
+    items={[
+      {
+        label: '管理员',
+        key: 'admin',
+      },
+      {
+        label: '操作员',
+        key: 'operator',
+      },
+    ]}
+  />
+);
+
 const MemberList: React.FC = () => {
   const renderRemoveUser = (text: string) => (
-    <Popconfirm title={`确认${text}吗?`} okText="是" cancelText="否">
+    <Popconfirm key="popconfirm" title={`确认${text}吗?`} okText="是" cancelText="否">
       <a>{text}</a>
     </Popconfirm>
   );
@@ -85,7 +103,13 @@ const MemberList: React.FC = () => {
     {
       dataIndex: 'role',
       title: '角色',
-      render: (_, record) => RoleMap[record.role || 'admin'].name,
+      render: (_, record) => (
+        <Dropdown overlay={roleMenu}>
+          <span>
+            {RoleMap[record.role || 'admin'].name} <DownOutlined />
+          </span>
+        </Dropdown>
+      ),
     },
     {
       dataIndex: 'permission',
@@ -101,12 +125,13 @@ const MemberList: React.FC = () => {
     {
       title: '操作',
       dataIndex: 'x',
+      valueType: 'option',
       render: (_, record) => {
         let node = renderRemoveUser('退出');
         if (record.role === 'admin') {
           node = renderRemoveUser('移除');
         }
-        return node;
+        return [<a key="edit">编辑</a>, node];
       },
     },
   ];

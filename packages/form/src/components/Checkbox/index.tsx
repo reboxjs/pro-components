@@ -1,58 +1,84 @@
-import React from 'react';
+import { runFunction } from '@ant-design/pro-utils';
+import type { CheckboxProps } from 'antd';
 import { Checkbox } from 'antd';
-import ProField from '@ant-design/pro-field';
-import { ProSchema } from '@ant-design/pro-utils';
-import { CheckboxGroupProps, CheckboxProps } from 'antd/lib/checkbox';
-import createField from '../../BaseForm/createField';
-import { ProFormItemProps } from '../../interface';
+import type { CheckboxGroupProps } from 'antd/es/checkbox';
+import React from 'react';
+import { createField } from '../../BaseForm/createField';
+import type { ProFormFieldItemProps, ProFormFieldRemoteProps } from '../../interface';
+import ProFormField from '../Field';
 
-export type ProFormCheckboxGroupProps = ProFormItemProps<CheckboxGroupProps> & {
+export type ProFormCheckboxGroupProps = ProFormFieldItemProps<
+  CheckboxGroupProps,
+  HTMLInputElement
+> & {
   layout?: 'horizontal' | 'vertical';
-  options: CheckboxGroupProps['options'];
-  valueEnum?: ProSchema['valueEnum'];
-  request?: ProSchema['request'];
-};
+  options?: CheckboxGroupProps['options'];
+} & ProFormFieldRemoteProps;
 
 const CheckboxGroup: React.FC<ProFormCheckboxGroupProps> = React.forwardRef(
-  ({ options, fieldProps, proFieldProps, ...rest }, ref) => (
-    <ProField
+  ({ options, fieldProps, proFieldProps, valueEnum, ...rest }, ref) => (
+    <ProFormField
       ref={ref}
       valueType="checkbox"
-      mode="edit"
-      {...rest}
+      valueEnum={runFunction<[any]>(valueEnum, undefined)}
       fieldProps={{
         options,
         ...fieldProps,
       }}
-      {...proFieldProps}
+      lightProps={{
+        labelFormatter: () => {
+          return (
+            <ProFormField
+              ref={ref}
+              valueType="checkbox"
+              mode="read"
+              valueEnum={runFunction<[any]>(valueEnum, undefined)}
+              filedConfig={{
+                customLightMode: true,
+              }}
+              fieldProps={{
+                options,
+                ...fieldProps,
+              }}
+              proFieldProps={proFieldProps}
+              {...rest}
+            />
+          );
+        },
+        ...rest.lightProps,
+      }}
+      proFieldProps={proFieldProps}
+      {...rest}
     />
   ),
 );
 
-export type ProFormCheckboxProps = ProFormItemProps<CheckboxProps>;
+export type ProFormCheckboxProps = ProFormFieldItemProps<CheckboxProps, HTMLInputElement>;
 
 /**
  * 多选框的
+ *
  * @param
  */
-const ProFormCheckbox: React.FC<ProFormCheckboxProps> = React.forwardRef<any, ProFormCheckboxProps>(
-  ({ fieldProps, children }, ref) => {
-    return (
-      <Checkbox ref={ref} {...fieldProps}>
-        {children}
-      </Checkbox>
-    );
-  },
-);
+const ProFormCheckboxComponents: React.FC<ProFormCheckboxProps> = React.forwardRef<
+  any,
+  ProFormCheckboxProps
+>(({ fieldProps, children }, ref) => {
+  return (
+    <Checkbox ref={ref} {...fieldProps}>
+      {children}
+    </Checkbox>
+  );
+});
 
-const Group = createField(CheckboxGroup);
-
-const WrappedProFormCheckbox: React.ComponentType<ProFormCheckboxProps> & {
-  Group: typeof Group;
-} = createField<ProFormCheckboxProps>(ProFormCheckbox, {
+const ProFormCheckbox = createField<ProFormCheckboxProps>(ProFormCheckboxComponents, {
   valuePropName: 'checked',
-}) as any;
+});
 
-WrappedProFormCheckbox.Group = Group;
+const WrappedProFormCheckbox: typeof ProFormCheckboxComponents & {
+  Group: typeof CheckboxGroup;
+} = ProFormCheckbox as any;
+
+WrappedProFormCheckbox.Group = CheckboxGroup;
 
 export default WrappedProFormCheckbox;

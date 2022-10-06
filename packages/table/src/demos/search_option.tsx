@@ -1,13 +1,13 @@
-import React from 'react';
 import { PlusOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Button } from 'antd';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   key: number;
   name: string;
   createdAt: number;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
@@ -25,12 +25,6 @@ const columns: ProColumns<GithubIssueItem>[] = [
     width: 100,
     valueType: 'money',
     renderText: () => (Math.random() * 100).toFixed(2),
-  },
-  {
-    title: 'Created Time',
-    key: 'since',
-    dataIndex: 'createdAt',
-    valueType: 'dateTime',
   },
 ];
 
@@ -54,28 +48,13 @@ export default () => (
     headerTitle="查询 Table"
     search={{
       defaultCollapsed: false,
-      optionRender: ({ searchText, resetText }, { form }) => {
-        return [
-          <Button
-            key="searchText"
-            type="primary"
-            onClick={() => {
-              form?.submit();
-            }}
-          >
-            {searchText}
-          </Button>,
-          <Button
-            key="resetText"
-            onClick={() => {
-              form?.resetFields();
-            }}
-          >
-            {resetText}
-          </Button>,
-          <Button key="out">导出</Button>,
-        ];
-      },
+      labelWidth: 'auto',
+      optionRender: (searchConfig, formProps, dom) => [
+        ...dom.reverse(),
+        <Button key="out" onClick={() => {}}>
+          导出
+        </Button>,
+      ],
     }}
     toolBarRender={() => [
       <Button key="primary" type="primary">

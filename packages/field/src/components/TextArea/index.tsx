@@ -1,19 +1,23 @@
+import { useIntl } from '@ant-design/pro-provider';
 import { Input } from 'antd';
 import React from 'react';
-import { useIntl } from '@ant-design/pro-provider';
+import type { ProFieldFC } from '../../index';
 
-import { ProFieldFC } from '../../index';
-
+// 兼容代码-----------
+import 'antd/es/input/style';
+//------------
 /**
  * 最基本的组件，就是个普通的 Input.TextArea
+ *
  * @param
  */
 const FieldTextArea: ProFieldFC<{
   text: string;
 }> = ({ text, mode, render, renderFormItem, fieldProps }, ref) => {
   const intl = useIntl();
+
   if (mode === 'read') {
-    const dom = <span ref={ref}>{text || '-'}</span>;
+    const dom = <span ref={ref}>{text ?? '-'}</span>;
     if (render) {
       return render(text, { mode, ...fieldProps }, dom);
     }
@@ -22,12 +26,12 @@ const FieldTextArea: ProFieldFC<{
   if (mode === 'edit' || mode === 'update') {
     const dom = (
       <Input.TextArea
+        ref={ref}
         rows={3}
         onKeyPress={(e) => {
           if (e.key === 'Enter') e.stopPropagation();
         }}
         placeholder={intl.getMessage('tableForm.inputPlaceholder', '请输入')}
-        ref={ref}
         {...fieldProps}
       />
     );

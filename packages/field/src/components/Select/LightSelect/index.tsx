@@ -1,16 +1,36 @@
-import React, { useState, useContext, useMemo } from 'react';
-import { Select, Input, ConfigProvider } from 'antd';
-import { SelectProps } from 'antd/es/select';
 import { SearchOutlined } from '@ant-design/icons';
+import { FieldLabel, useStyle } from '@ant-design/pro-utils';
+import type { SelectProps } from 'antd';
+import { ConfigProvider, Input, Select } from 'antd';
 import classNames from 'classnames';
-import { FieldLabel } from '@ant-design/pro-utils';
+import React, { useContext, useMemo, useState } from 'react';
+import type { ProFieldLightProps } from '../../../index';
 
-import './index.less';
-
-export interface LightSelectProps {
+export type LightSelectProps = {
   label?: string;
-  placeholder?: string;
-}
+  placeholder?: any;
+} & ProFieldLightProps;
+
+/**
+ * 如果有 label 就优先使用 label
+ *
+ * @param valueMap
+ * @param v
+ */
+const getValueOrLabel = (
+  valueMap: Record<string, string>,
+  v:
+    | {
+        label: string;
+        value: string;
+      }
+    | string,
+) => {
+  if (typeof v !== 'object') {
+    return valueMap[v] || v;
+  }
+  return valueMap[v?.value] || v.label;
+};
 
 const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightSelectProps> = (
   props,
@@ -33,36 +53,79 @@ const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightS
     options,
     onSearch,
     allowClear,
+    labelInValue,
+    fieldNames,
+    lightLabel,
+    labelTrigger,
     ...restProps
   } = props;
   const { placeholder = label } = props;
+  const { label: labelPropsName = 'label', value: valuePropsName = 'value' } = fieldNames || {};
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
   const prefixCls = getPrefixCls('pro-field-select-light-select');
   const [open, setOpen] = useState<boolean>(false);
   const [keyword, setKeyword] = useState<string>('');
 
-  const valueMap: {
-    [key: string]: string;
-  } = useMemo(() => {
+  // css
+  const { wrapSSR, hashId } = useStyle('LightSelect', (token) => {
+    return {
+      [`.${prefixCls}`]: {
+        [`${token.antCls}-select`]: {
+          position: 'absolute',
+          width: '153px',
+          height: '28px',
+          visibility: 'hidden',
+          '&-selector': {
+            height: 28,
+          },
+        },
+
+        [`&.${prefixCls}-searchable`]: {
+          [`${token.antCls}-select`]: {
+            width: '200px',
+            '&-selector': {
+              height: 28,
+            },
+          },
+        },
+      },
+    };
+  });
+
+  const valueMap: Record<string, string> = useMemo(() => {
     const values = {};
-    options?.forEach(({ label: aLabel, value: aValue }) => {
-      values[aValue] = aLabel || aValue;
+    options?.forEach((item) => {
+      const optionLabel = item[labelPropsName];
+      const optionValue = item[valuePropsName];
+      values[optionValue!] = optionLabel || optionValue;
     });
     return values;
-  }, [children, options]);
+  }, [labelPropsName, options, valuePropsName]);
 
-  return (
+  const filterValue = Array.isArray(value)
+    ? value.map((v) => getValueOrLabel(valueMap, v))
+    : getValueOrLabel(valueMap, value);
+
+  return wrapSSR(
     <div
       className={classNames(
         prefixCls,
+        hashId,
         {
           [`${prefixCls}-searchable`]: showSearch,
         },
         className,
       )}
       style={style}
-      onClick={() => {
-        if (!disabled) {
+      onClick={(e) => {
+        if (disabled) return;
+        // 点击label切换下拉菜单
+        const isLabelClick = lightLabel?.current?.labelRef?.current?.contains(
+          e.target as HTMLElement,
+        );
+        if (isLabelClick) {
+          setOpen(!open);
+        } else {
           setOpen(true);
         }
       }}
@@ -72,12 +135,11 @@ const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightS
         allowClear={allowClear}
         value={value}
         mode={mode}
+        labelInValue={labelInValue}
         size={size}
         disabled={disabled}
         onChange={(v, option) => {
-          if (onChange) {
-            onChange(v, option);
-          }
+          onChange?.(v, option);
           if (mode !== 'multiple') {
             setTimeout(() => {
               setOpen(false);
@@ -95,6 +157,7 @@ const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightS
                 <div style={{ margin: '4px 8px' }}>
                   <Input
                     value={keyword}
+                    allowClear={allowClear}
                     onChange={(e) => {
                       setKeyword(e.target.value.toLowerCase());
                       onSearch?.(e.target.value);
@@ -113,14 +176,23 @@ const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightS
           );
         }}
         open={open}
-        onDropdownVisibleChange={setOpen}
+        onDropdownVisibleChange={(isOpen) => {
+          if (!isOpen) {
+            setTimeout(() => {
+              setKeyword('');
+            }, 0);
+          }
+          if (!labelTrigger) {
+            setOpen(isOpen);
+          }
+        }}
         prefixCls={customizePrefixCls}
         options={
           keyword
             ? options?.filter((o) => {
                 return (
-                  String(o.label).toLowerCase().includes(keyword) ||
-                  o.value.toLowerCase().includes(keyword)
+                  String(o[labelPropsName])?.toLowerCase()?.includes(keyword) ||
+                  o[valuePropsName]?.toString()?.toLowerCase()?.includes(keyword)
                 );
               })
             : options
@@ -135,12 +207,13 @@ const LightSelect: React.ForwardRefRenderFunction<any, SelectProps<any> & LightS
         expanded={open}
         bordered={bordered}
         allowClear={allowClear}
-        value={Array.isArray(value) ? value.map((v) => valueMap[v] || v) : valueMap[value] || value}
+        value={filterValue || value?.label || value}
         onClear={() => {
           onChange?.(undefined, undefined as any);
         }}
+        ref={lightLabel}
       />
-    </div>
+    </div>,
   );
 };
 

@@ -1,6 +1,5 @@
-import { render, mount } from 'enzyme';
-import React from 'react';
-
+import { mount, render } from 'enzyme';
+import { act } from 'react-dom/test-utils';
 import ProSkeleton from '../../packages/skeleton/src/index';
 
 describe('skeleton', () => {
@@ -22,8 +21,10 @@ describe('skeleton', () => {
   it('🥩 descriptions api use', async () => {
     const wrapper = mount(<ProSkeleton type="descriptions" pageHeader={false} list={10} />);
     expect(wrapper.render()).toMatchSnapshot();
-    wrapper.setProps({
-      table: false,
+    act(() => {
+      wrapper.setProps({
+        table: false,
+      });
     });
     expect(wrapper.render()).toMatchSnapshot();
   });
@@ -40,10 +41,26 @@ describe('skeleton', () => {
       />,
     );
     expect(wrapper.render()).toMatchSnapshot();
-    wrapper.setProps({
-      list: false,
-      statistic: false,
+    act(() => {
+      wrapper.setProps({
+        list: false,
+        statistic: false,
+      });
     });
+    expect(wrapper.render()).toMatchSnapshot();
+  });
+
+  it('🥩 statistic=1,span=16', async () => {
+    const wrapper = mount(
+      <ProSkeleton
+        type="list"
+        pageHeader={false}
+        statistic={1}
+        actionButton={false}
+        toolbar={false}
+        list={10}
+      />,
+    );
     expect(wrapper.render()).toMatchSnapshot();
   });
 });

@@ -1,31 +1,34 @@
-import React from 'react';
+import { runFunction } from '@ant-design/pro-utils';
+import type { RadioGroupProps, RadioProps } from 'antd';
 import { Radio } from 'antd';
-import ProField from '@ant-design/pro-field';
-import { ProSchema } from '@ant-design/pro-utils';
-import { RadioGroupProps, RadioProps } from 'antd/lib/radio';
-import createField from '../../BaseForm/createField';
-import { ProFormItemProps } from '../../interface';
+import React from 'react';
+import { createField } from '../../BaseForm/createField';
+import type { ProFormFieldItemProps, ProFormFieldRemoteProps } from '../../interface';
+import ProField from '../Field';
 
-export type ProFormRadioGroupProps = ProFormItemProps<RadioGroupProps> & {
+export type ProFormRadioGroupProps = ProFormFieldItemProps<RadioGroupProps, HTMLDivElement> & {
   layout?: 'horizontal' | 'vertical';
   radioType?: 'button' | 'radio';
   options?: RadioGroupProps['options'];
-  valueEnum?: ProSchema['valueEnum'];
-  request?: ProSchema['request'];
-};
+} & ProFormFieldRemoteProps;
 
 const RadioGroup: React.FC<ProFormRadioGroupProps> = React.forwardRef(
-  ({ fieldProps, options, radioType, proFieldProps }, ref: any) => {
+  ({ fieldProps, options, radioType, layout, proFieldProps, valueEnum, ...rest }, ref: any) => {
     return (
       <ProField
-        mode="edit"
         valueType={radioType === 'button' ? 'radioButton' : 'radio'}
         ref={ref}
+        valueEnum={runFunction<[any]>(valueEnum, undefined)}
+        {...rest}
         fieldProps={{
           options,
+          layout,
           ...fieldProps,
         }}
-        {...proFieldProps}
+        proFieldProps={proFieldProps}
+        filedConfig={{
+          customLightMode: true,
+        }}
       />
     );
   },
@@ -33,9 +36,10 @@ const RadioGroup: React.FC<ProFormRadioGroupProps> = React.forwardRef(
 
 /**
  * Radio
+ *
  * @param
  */
-const ProFormRadio: React.FC<ProFormItemProps<RadioProps>> = React.forwardRef(
+const ProFormRadioComponents: React.FC<ProFormFieldItemProps<RadioProps>> = React.forwardRef(
   ({ fieldProps, children }, ref: any) => {
     return (
       <Radio {...fieldProps} ref={ref}>
@@ -45,19 +49,22 @@ const ProFormRadio: React.FC<ProFormItemProps<RadioProps>> = React.forwardRef(
   },
 );
 
-const Group = createField(RadioGroup, {
-  customLightMode: true,
+const ProFormRadio = createField<ProFormFieldItemProps<RadioProps>>(ProFormRadioComponents, {
+  valuePropName: 'checked',
+  ignoreWidth: true,
 });
 
-// @ts-expect-error
-const WrappedProFormRadio: React.ComponentType<ProFormItemProps<RadioProps>> & {
-  Group: typeof Group;
+const WrappedProFormRadio: typeof ProFormRadio & {
+  Group: typeof RadioGroup;
   Button: typeof Radio.Button;
-} = createField<ProFormItemProps<RadioProps>>(ProFormRadio, {
-  valuePropName: 'checked',
-});
-WrappedProFormRadio.Group = Group;
+} = ProFormRadio as any;
+
+WrappedProFormRadio.Group = RadioGroup;
 
 WrappedProFormRadio.Button = Radio.Button;
+
+// @ts-ignore
+// eslint-disable-next-line no-param-reassign
+WrappedProFormRadio.displayName = 'ProFormComponent';
 
 export default WrappedProFormRadio;

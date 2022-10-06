@@ -1,15 +1,14 @@
-import React from 'react';
+import { DownOutlined, EllipsisOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { LightFilter, ProFormDatePicker, ProTable } from '@ant-design/pro-components';
 import { Button, Dropdown, Menu } from 'antd';
-import { EllipsisOutlined, DownOutlined } from '@ant-design/icons';
-import { LightFilter, ProFormDatePicker } from '@ant-design/pro-form';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   containers: number;
   creator: string;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -52,6 +51,7 @@ const columns: ProColumns<TableListItem>[] = [
     title: '操作',
     key: 'option',
     valueType: 'option',
+    width: 120,
     render: () => [
       <a key="link">链路</a>,
       <a key="warn">报警</a>,
@@ -78,7 +78,7 @@ export default () => {
       toolbar={{
         multipleLine: true,
         search: {
-          onSearch: (value) => {
+          onSearch: (value: string) => {
             alert(value);
           },
         },
@@ -89,24 +89,38 @@ export default () => {
         ),
         actions: [
           <Dropdown
+            key="overlay"
             overlay={
-              <Menu onClick={() => alert('menu click')}>
-                <Menu.Item key="1">菜单</Menu.Item>
-                <Menu.Item key="2">列表</Menu.Item>
-                <Menu.Item key="3">表单</Menu.Item>
-              </Menu>
+              <Menu
+                onClick={() => alert('menu click')}
+                items={[
+                  {
+                    label: '菜单',
+                    key: '1',
+                  },
+                  {
+                    label: '列表',
+                    key: '2',
+                  },
+                  {
+                    label: '表单',
+                    key: '3',
+                  },
+                ]}
+              />
             }
           >
             <Button>
               移动自
               <DownOutlined
                 style={{
-                  marginLeft: 8,
+                  marginInlineStart: 8,
                 }}
               />
             </Button>
           </Dropdown>,
           <Button
+            key="add"
             type="primary"
             onClick={() => {
               alert('add');

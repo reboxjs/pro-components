@@ -1,14 +1,15 @@
-import React from 'react';
-import { Button, Tooltip } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-import ProTable, { ProColumns, TableDropdown } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable, TableDropdown } from '@ant-design/pro-components';
+import { Button, Tooltip } from 'antd';
+import dayjs from 'dayjs';
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   creator: string;
   createdAt: number;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -25,13 +26,23 @@ for (let i = 0; i < 5; i += 1) {
 const columns: ProColumns<TableListItem>[] = [
   {
     title: '应用名称',
-    width: 80,
     dataIndex: 'name',
     render: (_) => <a>{_}</a>,
+    formItemProps: {
+      lightProps: {
+        labelFormatter: (value) => `app-${value}`,
+      },
+    },
+  },
+  {
+    title: '日期范围',
+    dataIndex: 'startTime',
+    valueType: 'dateRange',
+    hideInTable: true,
+    initialValue: [dayjs(), dayjs().add(1, 'day')],
   },
   {
     title: '创建者',
-    width: 80,
     dataIndex: 'creator',
     valueType: 'select',
     valueEnum: {
@@ -48,11 +59,10 @@ const columns: ProColumns<TableListItem>[] = [
       <>
         创建时间
         <Tooltip placement="top" title="这是一段描述">
-          <QuestionCircleOutlined style={{ marginLeft: 4 }} />
+          <QuestionCircleOutlined style={{ marginInlineStart: 4 }} />
         </Tooltip>
       </>
     ),
-    width: 140,
     key: 'since',
     dataIndex: 'createdAt',
     valueType: 'date',
@@ -60,7 +70,7 @@ const columns: ProColumns<TableListItem>[] = [
   },
   {
     title: '操作',
-    width: 180,
+    width: '164px',
     key: 'option',
     valueType: 'option',
     render: () => [
@@ -90,6 +100,7 @@ export default () => {
           success: true,
         });
       }}
+      toolBarRender={() => [<Button key="show">查看日志</Button>]}
       rowKey="key"
       pagination={{
         showQuickJumper: true,
@@ -98,13 +109,6 @@ export default () => {
         filterType: 'light',
       }}
       dateFormatter="string"
-      headerTitle="表格标题"
-      toolBarRender={() => [
-        <Button key="show">查看日志</Button>,
-        <Button type="primary" key="primary">
-          创建应用
-        </Button>,
-      ]}
     />
   );
 };

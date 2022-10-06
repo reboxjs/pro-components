@@ -1,32 +1,32 @@
-import { DatePicker, Tooltip } from 'antd';
-import React, { useRef, useImperativeHandle } from 'react';
 import { useIntl } from '@ant-design/pro-provider';
-import moment from 'moment';
+import { parseValueToDay } from '@ant-design/pro-utils';
+import { DatePicker, Tooltip } from 'antd';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import type { ProFieldFC } from '../../index';
 
-import { ProFieldFC } from '../../index';
+// 兼容代码-----------
+import 'antd/es/date-picker/style';
+import React from 'react';
+//----------------------
 
+dayjs.extend(relativeTime);
 /**
- * 与当前的时间进行比较
- * http://momentjs.cn/docs/displaying/fromnow.html
+ * 与当前的时间进行比较 http://momentjs.cn/docs/displaying/fromnow.html
+ *
  * @param
  */
 const FieldFromNow: ProFieldFC<{
   text: string;
-}> = ({ text, mode, render, renderFormItem, fieldProps }, ref) => {
+  format?: string;
+}> = ({ text, mode, render, renderFormItem, format, fieldProps }, ref) => {
   const intl = useIntl();
-
-  const inputRef = useRef();
-  useImperativeHandle(
-    ref,
-    () => ({
-      ...(inputRef.current || {}),
-    }),
-    [inputRef.current],
-  );
 
   if (mode === 'read') {
     const dom = (
-      <Tooltip title={moment(text).format('YYYY-MM-DD HH:mm:ss')}>{moment(text).fromNow()}</Tooltip>
+      <Tooltip title={dayjs(text).format(fieldProps?.format || format || 'YYYY-MM-DD HH:mm:ss')}>
+        {dayjs(text).fromNow()}
+      </Tooltip>
     );
     if (render) {
       return render(text, { mode, ...fieldProps }, <>{dom}</>);
@@ -35,7 +35,16 @@ const FieldFromNow: ProFieldFC<{
   }
   if (mode === 'edit' || mode === 'update') {
     const placeholder = intl.getMessage('tableForm.selectPlaceholder', '请选择');
-    const dom = <DatePicker placeholder={placeholder} ref={inputRef} {...fieldProps} />;
+    const momentValue = parseValueToDay(fieldProps.value) as dayjs.Dayjs;
+    const dom = (
+      <DatePicker
+        ref={ref}
+        placeholder={placeholder}
+        showTime
+        {...fieldProps}
+        value={momentValue}
+      />
+    );
     if (renderFormItem) {
       return renderFormItem(text, { mode, ...fieldProps }, dom);
     }

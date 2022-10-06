@@ -1,28 +1,54 @@
-import { DatePicker, ConfigProvider } from 'antd';
-import React, { useState, useContext } from 'react';
-import moment from 'moment';
-import { FieldLabel, parseValueToMoment } from '@ant-design/pro-utils';
-import SizeContext from 'antd/lib/config-provider/SizeContext';
-import { ProFieldFC } from '../../index';
+import { FieldLabel, parseValueToDay } from '@ant-design/pro-utils';
+import { ConfigProvider, DatePicker, TimePicker } from 'antd';
+import dayjs from 'dayjs';
+import React, { useContext, useState } from 'react';
+import type { ProFieldFC, ProFieldLightProps } from '../../index';
+
+// 兼容代码-----------
+import 'antd/es/date-picker/style';
+//----------------------;
 
 /**
- * 日期选择组件
+ * 时间选择组件
+ *
  * @param
  */
-const FieldTimePicker: ProFieldFC<{
-  text: string | number;
-  format: string;
-}> = (
-  { text, mode, light, label, format = 'HH:mm:ss', render, renderFormItem, plain, fieldProps },
+const FieldTimePicker: ProFieldFC<
+  {
+    text: string | number;
+    format: string;
+  } & ProFieldLightProps
+> = (
+  {
+    text,
+    mode,
+    light,
+    label,
+    format,
+    render,
+    renderFormItem,
+    plain,
+    fieldProps,
+    lightLabel,
+    labelTrigger,
+  },
   ref,
 ) => {
   const [open, setOpen] = useState<boolean>(false);
-  const size = useContext(SizeContext);
+  const size = useContext(ConfigProvider.SizeContext);
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
   const prefixCls = getPrefixCls('pro-field-date-picker');
 
+  const finalFormat = fieldProps?.format || format || 'HH:mm:ss';
+
+  const isNumberOrMoment = dayjs.isDayjs(text) || typeof text === 'number';
+
   if (mode === 'read') {
-    const dom = <span ref={ref}>{text ? moment(text).format(format) : '-'}</span>;
+    const dom = (
+      <span ref={ref}>
+        {text ? dayjs(text, isNumberOrMoment ? undefined : finalFormat).format(finalFormat) : '-'}
+      </span>
+    );
     if (render) {
       return render(text, { mode, ...fieldProps }, <span>{dom}</span>);
     }
@@ -31,30 +57,40 @@ const FieldTimePicker: ProFieldFC<{
   if (mode === 'edit' || mode === 'update') {
     let dom;
     const { disabled, onChange, placeholder, allowClear, value } = fieldProps;
-    const momentValue = parseValueToMoment(value, format) as moment.Moment;
+    const dayValue = parseValueToDay(value, finalFormat) as dayjs.Dayjs;
     if (light) {
-      const valueStr: string = (momentValue && momentValue.format(format)) || '';
+      const valueStr: string = (dayValue && dayValue.format(finalFormat)) || '';
       dom = (
         <div
           className={`${prefixCls}-light`}
-          onClick={() => {
-            setOpen(true);
+          onClick={(e) => {
+            // 点击label切换下拉菜单
+            const isLabelClick = lightLabel?.current?.labelRef?.current?.contains(
+              e.target as HTMLElement,
+            );
+            if (isLabelClick) {
+              setOpen(!open);
+            } else {
+              setOpen(true);
+            }
           }}
         >
-          <DatePicker.TimePicker
-            {...fieldProps}
-            value={momentValue}
+          <TimePicker
+            value={dayValue}
             format={format}
             ref={ref}
+            {...fieldProps}
             onChange={(v) => {
-              if (onChange) {
-                onChange(v);
-              }
+              onChange?.(v);
               setTimeout(() => {
                 setOpen(false);
               }, 0);
             }}
-            onOpenChange={setOpen}
+            onOpenChange={(isOpen) => {
+              if (!labelTrigger) {
+                setOpen(isOpen);
+              }
+            }}
             open={open}
           />
           <FieldLabel
@@ -64,12 +100,9 @@ const FieldTimePicker: ProFieldFC<{
             size={size}
             value={valueStr}
             allowClear={allowClear}
-            onClear={() => {
-              if (onChange) {
-                onChange(null);
-              }
-            }}
+            onClear={() => onChange?.(null)}
             expanded={open}
+            ref={lightLabel}
           />
         </div>
       );
@@ -80,6 +113,7 @@ const FieldTimePicker: ProFieldFC<{
           format={format}
           bordered={plain === undefined ? true : !plain}
           {...fieldProps}
+          value={dayValue}
         />
       );
     }
@@ -90,5 +124,64 @@ const FieldTimePicker: ProFieldFC<{
   }
   return null;
 };
+
+/**
+ * 时间区间选择
+ *
+ * @param param0
+ * @param ref
+ */
+const FieldTimeRangePickerComponents: ProFieldFC<{
+  text: string[] | number[];
+  format: string;
+}> = ({ text, mode, format, render, renderFormItem, plain, fieldProps }, ref) => {
+  const finalFormat = fieldProps?.format || format || 'HH:mm:ss';
+  const [startText, endText] = Array.isArray(text) ? text : [];
+  const startTextIsNumberOrMoment = dayjs.isDayjs(startText) || typeof startText === 'number';
+  const endTextIsNumberOrMoment = dayjs.isDayjs(endText) || typeof endText === 'number';
+
+  const parsedStartText: string = startText
+    ? dayjs(startText, startTextIsNumberOrMoment ? undefined : finalFormat).format(finalFormat)
+    : '';
+  const parsedEndText: string = endText
+    ? dayjs(endText, endTextIsNumberOrMoment ? undefined : finalFormat).format(finalFormat)
+    : '';
+
+  if (mode === 'read') {
+    const dom = (
+      <div ref={ref}>
+        <div>{parsedStartText || '-'}</div>
+        <div>{parsedEndText || '-'}</div>
+      </div>
+    );
+    if (render) {
+      return render(text, { mode, ...fieldProps }, <span>{dom}</span>);
+    }
+    return dom;
+  }
+  if (mode === 'edit' || mode === 'update') {
+    const { value } = fieldProps;
+    const momentValue = parseValueToDay(value, finalFormat) as dayjs.Dayjs[];
+
+    const dom = (
+      <TimePicker.RangePicker
+        ref={ref}
+        format={format}
+        bordered={plain === undefined ? true : !plain}
+        {...fieldProps}
+        value={momentValue}
+      />
+    );
+    if (renderFormItem) {
+      return renderFormItem(text, { mode, ...fieldProps }, dom);
+    }
+    return dom;
+  }
+  return null;
+};
+
+const FieldTimeRangePicker = React.forwardRef(FieldTimeRangePickerComponents);
+
+export { FieldTimeRangePicker };
 
 export default React.forwardRef(FieldTimePicker);

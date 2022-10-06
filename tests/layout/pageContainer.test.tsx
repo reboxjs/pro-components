@@ -1,11 +1,9 @@
-import { render, mount } from 'enzyme';
-import React from 'react';
-import BasicLayout, {
-  PageContainer,
-  BasicLayoutProps,
-  FooterToolbar,
-} from '@ant-design/pro-layout';
-import { act } from 'react-test-renderer';
+import type { ProLayoutProps } from '@ant-design/pro-components';
+import { FooterToolbar, PageContainer, ProLayout } from '@ant-design/pro-components';
+import { render as libraryRender } from '@testing-library/react';
+import { mount, render } from 'enzyme';
+import React, { useEffect, useMemo, useState } from 'react';
+import { act } from 'react-dom/test-utils';
 import { waitForComponentToPaint } from '../util';
 
 describe('PageContainer', () => {
@@ -14,8 +12,36 @@ describe('PageContainer', () => {
     expect(html).toMatchSnapshot();
   });
 
+  it('💄 config is null', async () => {
+    const html = render(<PageContainer />);
+    expect(html).toMatchSnapshot();
+  });
+
+  it('💄 title,ghost,header,breadcrumbRender = false', async () => {
+    const html = mount(
+      <PageContainer title={false} ghost={false} header={undefined} breadcrumbRender={false}>
+        qixian
+      </PageContainer>,
+    );
+    expect(html.find('.ant-page-header').exists()).toBeFalsy();
+  });
+
+  it('💄 pageContainer support breadcrumbRender', async () => {
+    const html = mount(
+      <PageContainer breadcrumbRender={() => <div>这里是面包屑</div>}>content</PageContainer>,
+    );
+    expect(html.find('.ant-page-header-has-breadcrumb').at(0).find('div div').text()).toBe(
+      '这里是面包屑',
+    );
+  });
+
+  it('💄 pageContainer support tabBarExtraContent', async () => {
+    const html = mount(<PageContainer tabBarExtraContent="测试">content</PageContainer>);
+    expect(html.find('.ant-tabs-extra-content').at(0).find('div').text()).toBe('测试');
+  });
+
   it('⚡️ support footer', async () => {
-    const html = render(
+    const wrapper = mount(
       <PageContainer
         title="期贤"
         footer={[
@@ -25,6 +51,8 @@ describe('PageContainer', () => {
         ]}
       />,
     );
+    expect(wrapper?.find('.ant-pro-page-container-with-footer').length).toBe(1);
+    const html = wrapper.render();
     expect(html).toMatchSnapshot();
   });
 
@@ -40,6 +68,11 @@ describe('PageContainer', () => {
 
   it('⚡️ support loading', async () => {
     const html = render(<PageContainer title="期贤" loading />);
+    expect(html).toMatchSnapshot();
+  });
+
+  it('⚡️ support more loading props', async () => {
+    const html = render(<PageContainer title="期贤" loading={{ spinning: true, tip: '加载中' }} />);
     expect(html).toMatchSnapshot();
   });
 
@@ -107,39 +140,44 @@ describe('PageContainer', () => {
   });
 
   it('🐲 footer should know width', async () => {
-    const wrapper = mount<BasicLayoutProps>(
-      <BasicLayout>
+    const wrapper = mount<ProLayoutProps>(
+      <ProLayout>
         <PageContainer
+          title="期贤"
           footer={[
             <button type="button" key="button">
               qixian
             </button>,
           ]}
         />
-      </BasicLayout>,
+      </ProLayout>,
     );
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 208px)');
-    wrapper.setProps({
-      collapsed: true,
+    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 256px)');
+    act(() => {
+      wrapper.setProps({
+        collapsed: true,
+      });
     });
 
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 48px)');
-
-    wrapper.setProps({
-      layout: 'top',
+    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 60px)');
+    act(() => {
+      wrapper.setProps({
+        layout: 'top',
+      });
     });
-
     expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('100%');
-    expect(wrapper.render()).toMatchSnapshot();
+    act(() => {
+      expect(wrapper.render()).toMatchSnapshot();
+    });
   });
 
   it('🐲 FooterToolbar should know width', async () => {
-    const wrapper = mount<BasicLayoutProps>(
-      <BasicLayout>
+    const wrapper = mount<ProLayoutProps>(
+      <ProLayout>
         <PageContainer>
           <FooterToolbar>
             <button type="button" key="button">
@@ -147,26 +185,33 @@ describe('PageContainer', () => {
             </button>
           </FooterToolbar>
         </PageContainer>
-      </BasicLayout>,
+      </ProLayout>,
     );
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 208px)');
-    wrapper.setProps({
-      collapsed: true,
+    expect(wrapper?.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 256px)');
+    act(() => {
+      wrapper.setProps({
+        collapsed: true,
+      });
     });
 
     await waitForComponentToPaint(wrapper);
 
-    expect(wrapper.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 48px)');
-
-    wrapper.setProps({
-      layout: 'top',
+    expect(wrapper.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('calc(100% - 60px)');
+    act(() => {
+      wrapper.setProps({
+        layout: 'top',
+      });
     });
     expect(wrapper.find('.ant-pro-footer-bar')?.props()?.style?.width).toBe('100%');
-    expect(wrapper.render()).toMatchSnapshot();
+    act(() => {
+      expect(wrapper.render()).toMatchSnapshot();
+    });
     // test useUseEffect render function
-    wrapper.unmount();
+    act(() => {
+      wrapper.unmount();
+    });
   });
 
   it('🐲 footer is null, do not render footerToolbar ', async () => {
@@ -180,13 +225,59 @@ describe('PageContainer', () => {
       />,
     );
     await waitForComponentToPaint(wrapper);
-    expect(wrapper.render()).toMatchSnapshot();
-
-    wrapper.setProps({
-      footer: undefined,
+    act(() => {
+      expect(wrapper.render()).toMatchSnapshot();
+    });
+    act(() => {
+      wrapper.setProps({
+        footer: undefined,
+      });
     });
     await waitForComponentToPaint(wrapper);
-    expect(wrapper.render()).toMatchSnapshot();
+    act(() => {
+      expect(wrapper.render()).toMatchSnapshot();
+    });
+  });
+
+  it('🐲 pro-layout support breadcrumbProps', async () => {
+    const wrapper = render(
+      <ProLayout
+        breadcrumbProps={{
+          separator: '>',
+          routes: [
+            {
+              path: 'index',
+              breadcrumbName: 'home',
+            },
+            {
+              path: 'first',
+              breadcrumbName: 'first',
+              children: [
+                {
+                  path: '/general',
+                  breadcrumbName: 'General',
+                },
+                {
+                  path: '/layout',
+                  breadcrumbName: 'Layout',
+                },
+                {
+                  path: '/navigation',
+                  breadcrumbName: 'Navigation',
+                },
+              ],
+            },
+            {
+              path: 'second',
+              breadcrumbName: 'second',
+            },
+          ],
+        }}
+      >
+        <PageContainer />
+      </ProLayout>,
+    );
+    expect(wrapper).toMatchSnapshot();
   });
 
   it('🐲 header.footer is null, do not render footerToolbar ', async () => {
@@ -200,16 +291,16 @@ describe('PageContainer', () => {
       />,
     );
     await waitForComponentToPaint(wrapper);
-    expect(wrapper.render()).toMatchSnapshot();
-
-    wrapper.setProps({
-      header: { footer: undefined },
+    expect(wrapper.find('.ant-pro-footer-bar').exists()).toBeTruthy();
+    act(() => {
+      wrapper.setProps({ footer: undefined });
     });
     await waitForComponentToPaint(wrapper);
-    expect(wrapper.render()).toMatchSnapshot();
+
+    expect(wrapper.find('.ant-pro-footer-bar').exists()).toBeFalsy();
   });
 
-  it('🐲  tabList and onTabChange is run', async () => {
+  it('🐲 tabList and onTabChange is run', async () => {
     const fn = jest.fn();
     const wrapper = mount(
       <PageContainer
@@ -234,5 +325,90 @@ describe('PageContainer', () => {
     });
 
     expect(fn).toBeCalledWith('info');
+  });
+
+  it('🐲 content is text and title is null', () => {
+    const html = render(<PageContainer content="just so so" />);
+    expect(html).toMatchSnapshot();
+
+    const html2 = render(<PageContainer extraContent={<div>extraContent</div>} />);
+    expect(html2).toMatchSnapshot();
+  });
+
+  it('🐛 className prop should not be passed to its page header, fix #3493', async () => {
+    const wrapper = mount(
+      <PageContainer
+        className="custom-className"
+        header={{
+          title: '页面标题',
+        }}
+      />,
+    );
+    // 对于 enzyme 3.x，透传下去的 className，直接 find 的结果数为 2，同时包含 React 组件实例和 DOM 节点，需要用 hostNodes() 方法筛选出 DOM 节点
+    // issue: https://github.com/enzymejs/enzyme/issues/836#issuecomment-401260477
+    expect(wrapper?.find('.custom-className').hostNodes().length).toBe(1);
+    const html = wrapper.render();
+    expect(html).toMatchSnapshot();
+  });
+
+  it('🌛 PageContainer with custom loading', async () => {
+    const App = () => {
+      const loadingDom = useMemo(
+        () => (
+          <div id="customLoading" style={{ color: 'red', padding: '30px', textAlign: 'center' }}>
+            自定义加载...
+          </div>
+        ),
+        [],
+      );
+      const [loading, setLoading] = useState<React.ReactNode | false>(loadingDom);
+      useEffect(() => {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }, []);
+      return (
+        <PageContainer
+          loading={loading}
+          className="custom-className"
+          header={{
+            title: '页面标题',
+          }}
+        />
+      );
+    };
+
+    const wrapper = libraryRender(<App />);
+    await waitForComponentToPaint(wrapper);
+    expect(wrapper.baseElement.querySelectorAll('#customLoading').length).toBe(1);
+    expect(wrapper.asFragment()).toMatchSnapshot();
+    await waitForComponentToPaint(wrapper, 1000);
+    expect(wrapper.baseElement.querySelectorAll('#customLoading').length).toBe(0);
+  });
+
+  it('🐛 breadcrumbRender and restProps?.header?.breadcrumbRender', async () => {
+    const html = libraryRender(
+      <PageContainer
+        className="custom-className"
+        breadcrumbRender={false}
+        header={{
+          breadcrumbRender: () => 'diss',
+        }}
+      />,
+    );
+
+    expect(html.container.innerText).toBe(undefined);
+
+    html.rerender(
+      <PageContainer
+        className="custom-className"
+        header={{
+          breadcrumbRender: () => 'diss',
+        }}
+      />,
+    );
+    expect(
+      html.container.getElementsByClassName('ant-page-header-has-breadcrumb')[0].innerHTML,
+    ).toBe('diss');
   });
 });

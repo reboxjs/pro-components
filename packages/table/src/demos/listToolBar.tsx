@@ -1,15 +1,25 @@
-import React from 'react';
-import { Button, Badge } from 'antd';
-import { EllipsisOutlined } from '@ant-design/icons';
-import { LightFilter, ProFormDatePicker } from '@ant-design/pro-form';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { LightFilter, ProFormDatePicker, ProTable } from '@ant-design/pro-components';
+import { Badge, Button, Tooltip } from 'antd';
+import React, { useState } from 'react';
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   containers: number;
+  status: string;
   creator: string;
-}
+  createdAt: number;
+};
+
+const valueEnum = {
+  0: 'close',
+  1: 'running',
+  2: 'online',
+  3: 'error',
+};
+
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -19,6 +29,8 @@ for (let i = 0; i < 5; i += 1) {
     key: i,
     name: 'AppName',
     containers: Math.floor(Math.random() * 20),
+    status: valueEnum[Math.floor(Math.random() * 10) % 4],
+    createdAt: Date.now() - Math.floor(Math.random() * 2000),
     creator: creators[Math.floor(Math.random() * creators.length)],
   });
 }
@@ -28,12 +40,6 @@ const columns: ProColumns<TableListItem>[] = [
     title: '应用名称',
     dataIndex: 'name',
     render: (_) => <a>{_}</a>,
-  },
-  {
-    title: '容器数量',
-    dataIndex: 'containers',
-    align: 'right',
-    sorter: (a, b) => a.containers - b.containers,
   },
   {
     title: '创建者',
@@ -48,34 +54,83 @@ const columns: ProColumns<TableListItem>[] = [
     },
   },
   {
+    title: '状态',
+    dataIndex: 'status',
+    initialValue: 'all',
+    filters: true,
+    onFilter: true,
+    valueEnum: {
+      all: { text: '全部', status: 'Default' },
+      close: { text: '待发布', status: 'Default' },
+      running: { text: '发布中', status: 'Processing' },
+      online: { text: '发布成功', status: 'Success' },
+      error: { text: '发布失败', status: 'Error' },
+    },
+  },
+  {
+    title: '容器数量',
+    dataIndex: 'containers',
+    align: 'right',
+    sorter: (a, b) => a.containers - b.containers,
+  },
+  {
+    title: (
+      <>
+        创建时间
+        <Tooltip placement="top" title="这是一段描述">
+          <QuestionCircleOutlined style={{ marginInlineStart: 4 }} />
+        </Tooltip>
+      </>
+    ),
+    width: 140,
+    key: 'since',
+    dataIndex: 'createdAt',
+    valueType: 'date',
+    sorter: (a, b) => a.createdAt - b.createdAt,
+  },
+  {
     title: '操作',
     key: 'option',
+    width: 120,
     valueType: 'option',
-    render: () => [
-      <a key="link">链路</a>,
-      <a key="warn">报警</a>,
-      <a key="more">
-        <EllipsisOutlined />
+    render: (_, record) => [
+      record.status === 'close' && <a key="link">发布</a>,
+      (record.status === 'running' || record.status === 'online') && <a key="warn">停用</a>,
+      record.status === 'error' && <a key="republish">重新发布</a>,
+      <a
+        key="republish"
+        style={
+          record.status === 'running'
+            ? {
+                color: 'rgba(0,0,0,.25)',
+                cursor: 'not-allowed',
+              }
+            : {}
+        }
+      >
+        监控
       </a>,
     ],
   },
 ];
 
-const renderBadge = (count: number) => {
+const renderBadge = (count: number, active = false) => {
   return (
     <Badge
       count={count}
       style={{
-        marginTop: -4,
-        marginLeft: 4,
-        color: '#999',
-        backgroundColor: '#eee',
+        marginBlockStart: -2,
+        marginInlineStart: 4,
+        color: active ? '#1890FF' : '#999',
+        backgroundColor: active ? '#E6F7FF' : '#eee',
       }}
     />
   );
 };
 
 export default () => {
+  const [activeKey, setActiveKey] = useState<React.Key>('tab1');
+
   return (
     <ProTable<TableListItem>
       columns={columns}
@@ -88,36 +143,31 @@ export default () => {
         });
       }}
       toolbar={{
-        multipleLine: true,
         filter: (
           <LightFilter>
             <ProFormDatePicker name="startdate" label="响应日期" />
           </LightFilter>
         ),
-        tabs: {
+        menu: {
+          type: 'tab',
+          activeKey: activeKey,
           items: [
             {
               key: 'tab1',
-              tab: '标签一',
+              label: <span>应用{renderBadge(99, activeKey === 'tab1')}</span>,
             },
             {
               key: 'tab2',
-              tab: '标签二',
-            },
-          ],
-        },
-        menu: {
-          type: 'inline',
-          items: [
-            {
-              label: <span>全部应用{renderBadge(101)}</span>,
-              key: 'all',
+              label: <span>项目{renderBadge(30, activeKey === 'tab2')}</span>,
             },
             {
-              label: <span>我创建的应用{renderBadge(3)}</span>,
-              key: 'todo',
+              key: 'tab3',
+              label: <span>文章{renderBadge(30, activeKey === 'tab3')}</span>,
             },
           ],
+          onChange: (key) => {
+            setActiveKey(key as string);
+          },
         },
         actions: [
           <Button key="primary" type="primary">
@@ -131,6 +181,14 @@ export default () => {
       }}
       search={false}
       dateFormatter="string"
+      options={{
+        setting: {
+          draggable: true,
+          checkable: true,
+          checkedReset: false,
+          extra: [<a key="confirm">确认</a>],
+        },
+      }}
     />
   );
 };

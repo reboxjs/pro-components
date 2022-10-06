@@ -1,6 +1,4 @@
-import React from 'react';
-
-import ProDescriptions from '@ant-design/pro-descriptions';
+import { ProDescriptions } from '@ant-design/pro-components';
 
 export default () => {
   return (
@@ -14,6 +12,7 @@ export default () => {
             date: '20200809',
             money: '1212100',
             state: 'all',
+            switch: true,
             state2: 'open',
           },
         });
@@ -53,10 +52,37 @@ export default () => {
           valueType: 'date',
         },
         {
+          title: '时间',
+          key: 'date',
+          dataIndex: 'date',
+          valueType: 'date',
+          fieldProps: {
+            format: 'DD.MM.YYYY',
+          },
+        },
+        {
+          title: '开关',
+          key: 'switch',
+          dataIndex: 'switch',
+          valueType: 'switch',
+        },
+        {
           title: 'money',
           key: 'money',
           dataIndex: 'money',
           valueType: 'money',
+          fieldProps: {
+            moneySymbol: '$',
+          },
+        },
+        {
+          title: 'money无符号',
+          key: 'money',
+          dataIndex: 'money',
+          valueType: 'money',
+          fieldProps: {
+            moneySymbol: false,
+          },
         },
         {
           title: '操作',
@@ -75,7 +101,7 @@ export default () => {
         },
       ]}
     >
-      <ProDescriptions.Item label="百分比" valueType="percent">
+      <ProDescriptions.Item dataIndex="percent" label="百分比" valueType="percent">
         100
       </ProDescriptions.Item>
     </ProDescriptions>

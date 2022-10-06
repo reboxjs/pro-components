@@ -1,6 +1,7 @@
-import React, { useState, ReactText } from 'react';
-import { Button, Progress, Tag, Space } from 'antd';
-import ProList from '@ant-design/pro-list';
+import { ProList } from '@ant-design/pro-components';
+import { Button, Progress, Space, Tag } from 'antd';
+import type { ReactText } from 'react';
+import { useState } from 'react';
 
 const dataSource = [
   {
@@ -26,7 +27,7 @@ const dataSource = [
 ];
 
 export default () => {
-  const [expandedRowKeys, setExpandedRowKeys] = useState<ReactText[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<readonly ReactText[]>([]);
 
   return (
     <ProList<{ title: string }>
@@ -82,7 +83,7 @@ export default () => {
         },
         actions: {
           render: () => {
-            return [<a>邀请</a>];
+            return <a key="invite">邀请</a>;
           },
         },
       }}

@@ -1,18 +1,19 @@
+import 'antd/es/skeleton/style';
 import React from 'react';
-import ListPageSkeleton, {
-  ListPageSkeletonProps,
-  PageHeaderSkeleton,
-  ListToolbarSkeleton,
-  ListSkeleton,
-  ListSkeletonItem,
-} from './component/List';
-import ResultPageSkeleton from './component/Result';
+import type { DescriptionsPageSkeletonProps } from './component/Descriptions';
 import DescriptionsPageSkeleton, {
-  TableItemSkeleton,
   DescriptionsSkeleton,
-  DescriptionsPageSkeletonProps,
+  TableItemSkeleton,
   TableSkeleton,
 } from './component/Descriptions';
+import type { ListPageSkeletonProps } from './component/List';
+import ListPageSkeleton, {
+  ListSkeleton,
+  ListSkeletonItem,
+  ListToolbarSkeleton,
+  PageHeaderSkeleton,
+} from './component/List';
+import ResultPageSkeleton from './component/Result';
 
 const PageSkeleton: React.FC<
   ListPageSkeletonProps &
@@ -24,9 +25,11 @@ const PageSkeleton: React.FC<
   if (type === 'result') {
     return <ResultPageSkeleton {...rest} />;
   }
+
   if (type === 'descriptions') {
     return <DescriptionsPageSkeleton {...rest} />;
   }
+
   return <ListPageSkeleton {...rest} />;
 };
 

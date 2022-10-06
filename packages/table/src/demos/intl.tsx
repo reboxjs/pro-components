@@ -1,39 +1,46 @@
-import React, { useRef, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Select, ConfigProvider, Space } from 'antd';
-import ProTable, { ProColumns, ActionType } from '@ant-design/pro-table';
-import moment from 'moment';
-import enUSIntl from 'antd/lib/locale/en_US';
-import zhCNIntl from 'antd/lib/locale/zh_CN';
-import viVNIntl from 'antd/lib/locale/vi_VN';
-import itITIntl from 'antd/lib/locale/it_IT';
-import jaJPIntl from 'antd/lib/locale/ja_JP';
-import esESIntl from 'antd/lib/locale/es_ES';
-import ruRUIntl from 'antd/lib/locale/ru_RU';
-import msMYIntl from 'antd/lib/locale/ms_MY';
-import zhTWIntl from 'antd/lib/locale/zh_TW';
-import frFRIntl from 'antd/lib/locale/fr_FR';
-import ptBRIntl from 'antd/lib/locale/pt_BR';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, ConfigProvider, Select, Space } from 'antd';
+import caESIntl from 'antd/es/locale/ca_ES';
+import enGBIntl from 'antd/es/locale/en_GB';
+import enUSIntl from 'antd/es/locale/en_US';
+import esESIntl from 'antd/es/locale/es_ES';
+import frFRIntl from 'antd/es/locale/fr_FR';
+import itITIntl from 'antd/es/locale/it_IT';
+import jaJPIntl from 'antd/es/locale/ja_JP';
+import msMYIntl from 'antd/es/locale/ms_MY';
+import ptBRIntl from 'antd/es/locale/pt_BR';
+import ruRUIntl from 'antd/es/locale/ru_RU';
+import srRSIntl from 'antd/es/locale/sr_RS';
+import viVNIntl from 'antd/es/locale/vi_VN';
+import zhCNIntl from 'antd/es/locale/zh_CN';
+import zhTWIntl from 'antd/es/locale/zh_TW';
+import dayjs from 'dayjs';
+import { useRef, useState } from 'react';
 
 const intlMap = {
   zhCNIntl,
   enUSIntl,
+  enGBIntl,
   viVNIntl,
   itITIntl,
   jaJPIntl,
   esESIntl,
+  caESIntl,
   ruRUIntl,
+  srRSIntl,
   msMYIntl,
   zhTWIntl,
   frFRIntl,
   ptBRIntl,
 };
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   key: number;
   name: string;
   createdAt: number;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
@@ -49,14 +56,9 @@ const columns: ProColumns<GithubIssueItem>[] = [
     title: 'Money',
     dataIndex: 'title',
     width: 100,
+    order: 1,
     valueType: 'money',
     renderText: () => (Math.random() * 100).toFixed(2),
-  },
-  {
-    title: 'Created Time',
-    key: 'since',
-    dataIndex: 'createdAt',
-    valueType: 'dateTime',
   },
 ];
 
@@ -82,6 +84,9 @@ export default () => {
         }}
         rowKey="key"
         rowSelection={{}}
+        search={{
+          labelWidth: 'auto',
+        }}
         dateFormatter="string"
         headerTitle={
           <Space>
@@ -90,7 +95,7 @@ export default () => {
               bordered={false}
               value={intl}
               onChange={(value) => {
-                moment.locale(intlMap[value].locale);
+                dayjs.locale(intlMap[value].locale);
                 setIntl(value);
               }}
               options={Object.keys(intlMap).map((value) => ({ value, label: value }))}

@@ -1,15 +1,16 @@
-import { mount } from 'enzyme';
-import React, { useRef } from 'react';
-import { Button } from 'antd';
 import ProDescriptions from '@ant-design/pro-descriptions';
-import { ProCoreActionType } from '@ant-design/pro-utils';
+import type { ProCoreActionType } from '@ant-design/pro-utils';
+import '@testing-library/jest-dom';
+import { render as reactRender } from '@testing-library/react';
+import { Button } from 'antd';
+import { mount } from 'enzyme';
+import { useRef } from 'react';
 import { act } from 'react-dom/test-utils';
-
 import { waitForComponentToPaint, waitTime } from '../util';
 
 describe('descriptions', () => {
-  it('🥩  descriptions render valueEnum when data = 0', async () => {
-    const html = mount(
+  it('🥩 descriptions render valueEnum when data = 0', async () => {
+    const html = reactRender(
       <ProDescriptions
         columns={[
           {
@@ -31,7 +32,62 @@ describe('descriptions', () => {
       />,
     );
     await waitForComponentToPaint(html, 200);
-    expect(html.find('span.ant-badge-status-text').text()).toBe('关闭');
+    expect(html.baseElement.querySelector('span.ant-badge-status-text')?.innerHTML).toBe('关闭');
+  });
+
+  it('🎏 onLoadingChange test', async () => {
+    const fn = jest.fn();
+    const html = mount(
+      <ProDescriptions
+        size="small"
+        onLoadingChange={fn}
+        columns={[
+          {
+            dataIndex: 'money',
+            valueType: 'money',
+          },
+        ]}
+        request={async () => {
+          return {
+            data: [],
+          };
+        }}
+      />,
+    );
+    await waitForComponentToPaint(html, 1200);
+    expect(fn).toBeCalled();
+  });
+
+  it('🎏 loading test', async () => {
+    const html = mount(
+      <ProDescriptions
+        columns={[
+          {
+            title: 'money',
+            dataIndex: 'money',
+            valueType: 'money',
+          },
+        ]}
+        request={async () => {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({ data: [] });
+            }, 5000);
+          });
+        }}
+      />,
+    );
+    await waitForComponentToPaint(html, 1200);
+    expect(html.find('.ant-skeleton').exists()).toBeTruthy();
+
+    act(() => {
+      html.setProps({
+        loading: false,
+      });
+    });
+    await waitForComponentToPaint(html, 1200);
+    // props 指定为 false 后，无论 request 完成与否都不会出现 spin
+    expect(html.find('.ant-skeleton').exists()).toBeFalsy();
   });
 
   it('🥩 test reload', async () => {
@@ -58,7 +114,7 @@ describe('descriptions', () => {
                 actionRef.current?.reload();
               }}
             >
-              修改
+              刷新
             </Button>
           }
         >
@@ -68,14 +124,14 @@ describe('descriptions', () => {
         </ProDescriptions>
       );
     };
-    const html = mount(<Reload />);
+    const html = reactRender(<Reload />);
     await waitForComponentToPaint(html, 300);
 
     act(() => {
-      html.find('Button#reload').simulate('click');
+      html.queryByText('刷新')?.click();
     });
     act(() => {
-      html.find('Button#reload').simulate('click');
+      html.queryByText('刷新')?.click();
     });
     await waitForComponentToPaint(html);
 
@@ -146,7 +202,7 @@ describe('descriptions', () => {
     expect(fn).toBeCalledTimes(1);
   });
 
-  it('🏊‍♂️ Progress', () => {
+  it('🏊 Progress', () => {
     const html = mount(
       <ProDescriptions>
         <ProDescriptions.Item label="进度条1" valueType="progress">
@@ -163,5 +219,92 @@ describe('descriptions', () => {
     expect(html.find('.ant-progress-text').at(0).text()).toEqual('40%');
     expect(html.find('.ant-progress-text').at(1).find('.anticon-close-circle')).toBeTruthy();
     expect(html.find('.ant-progress-text').at(1).find('.anticon-check-circle')).toBeTruthy();
+  });
+
+  it('🏊 ProDescriptions support order', () => {
+    const html = mount(
+      <ProDescriptions
+        dataSource={{
+          title: 'test',
+        }}
+        columns={[
+          {
+            title: '标题',
+            dataIndex: 'title',
+            valueType: 'text',
+            order: 100,
+          },
+        ]}
+      >
+        <ProDescriptions.Item order={9} label="进度条1" valueType="progress">
+          40
+        </ProDescriptions.Item>
+        <ProDescriptions.Item label="进度条2" valueType="progress">
+          -1
+        </ProDescriptions.Item>
+        <ProDescriptions.Item order={8} label="进度条3" valueType="progress">
+          100
+        </ProDescriptions.Item>
+      </ProDescriptions>,
+    );
+    act(() => {
+      expect(html.render()).toMatchSnapshot();
+    });
+  });
+
+  it('📝 typography support and copy', async () => {
+    const wrapper = reactRender(
+      <ProDescriptions
+        title="dataSource and columns"
+        dataSource={{
+          id: '这是一段文本columns',
+          date: '20200809',
+          money: '1212100',
+          state: 'all',
+          state2: 'open',
+        }}
+        columns={[
+          {
+            title: '文本',
+            key: 'text',
+            dataIndex: 'id',
+            ellipsis: true,
+            copyable: true,
+          },
+        ]}
+      />,
+    );
+
+    expect(
+      wrapper.baseElement.querySelector(
+        'span.ant-descriptions-item-content div.ant-typography-copy',
+      ),
+    ).toBeTruthy();
+
+    wrapper.rerender(
+      <ProDescriptions
+        title="dataSource and columns"
+        dataSource={{
+          id: '这是一段文本columns',
+          date: '20200809',
+          money: '1212100',
+          state: 'all',
+          state2: 'open',
+        }}
+        columns={[
+          {
+            title: '文本',
+            key: 'text',
+            dataIndex: 'id',
+          },
+        ]}
+      />,
+    );
+    expect(
+      wrapper.baseElement.querySelectorAll('.ant-descriptions-item-content .ant-typography-copy')
+        .length,
+    ).toBe(0);
+
+    wrapper.unmount();
   });
 });

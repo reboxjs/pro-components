@@ -1,40 +1,31 @@
 import { isBrowser } from '@ant-design/pro-utils';
-import zhLocal from './zh-CN';
-import zhTWLocal from './zh-TW';
 import enUSLocal from './en-US';
 import itITLocal from './it-IT';
+import koKRLocal from './ko-KR';
+import zhLocal from './zh-CN';
+import zhTWLocal from './zh-TW';
 
 const locales = {
   'zh-CN': zhLocal,
   'zh-TW': zhTWLocal,
   'en-US': enUSLocal,
   'it-IT': itITLocal,
+  'ko-KR': koKRLocal,
 };
 
-interface GLocaleWindow {
+type GLocaleWindow = {
   g_locale: keyof typeof locales;
-}
+};
 
 export type LocaleType = keyof typeof locales;
 
-const getLanguage = (): string => {
-  let lang;
+export const getLanguage = (): string => {
   // support ssr
-  if (!isBrowser()) {
-    return lang || '';
-  }
-  lang = window.localStorage.getItem('umi_locale');
-  return lang || ((window as unknown) as GLocaleWindow).g_locale || navigator.language;
+  if (!isBrowser()) return 'zh-CN';
+  const lang = window.localStorage.getItem('umi_locale');
+  return lang || (window as unknown as GLocaleWindow).g_locale || navigator.language;
 };
-
-export { getLanguage };
-
-export default (): {
-  [key: string]: string;
-} => {
+export const gLocaleObject = (): Record<string, string> => {
   const gLocale = getLanguage();
-  if (locales[gLocale]) {
-    return locales[gLocale];
-  }
-  return locales['zh-CN'];
+  return locales[gLocale] || locales['zh-CN'];
 };

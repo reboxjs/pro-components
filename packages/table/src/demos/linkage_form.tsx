@@ -1,22 +1,21 @@
 /* eslint-disable no-console */
-import React, { useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Button, Input, Select } from 'antd';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import React, { useEffect, useState } from 'react';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   key: number;
   name: string;
   createdAt: number;
-}
+};
 
 const MySelect: React.FC<{
   state: {
     type: number;
   };
-  /**
-   * value 和 onChange 会被自动注入
-   */
+  /** Value 和 onChange 会被自动注入 */
   value?: string;
   onChange?: (value: string) => void;
 }> = (props) => {
@@ -54,6 +53,7 @@ const MySelect: React.FC<{
         },
       ]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(state)]);
 
   return <Select options={innerOptions} value={props.value} onChange={props.onChange} />;
@@ -69,32 +69,9 @@ export default () => {
     {
       title: '标题',
       dataIndex: 'name',
-      search: false,
     },
     {
-      title: '状态',
-      dataIndex: 'state',
-      initialValue: 1,
-      valueType: 'select',
-      fieldProps: {
-        options: [
-          {
-            label: '月份',
-            value: 1,
-          },
-          {
-            label: '周',
-            value: 2,
-          },
-          {
-            label: '自定义',
-            value: 3,
-          },
-        ],
-      },
-    },
-    {
-      title: '动态',
+      title: '动态表单',
       key: 'direction',
       hideInTable: true,
       dataIndex: 'direction',
@@ -106,6 +83,9 @@ export default () => {
         if (stateType === 3) {
           return <Input />;
         }
+        if (stateType === 4) {
+          return null;
+        }
         return (
           <MySelect
             {...rest}
@@ -116,12 +96,37 @@ export default () => {
         );
       },
     },
+    {
+      title: '状态',
+      dataIndex: 'state',
+      initialValue: 1,
+      valueType: 'select',
+      request: async () => [
+        {
+          label: '月份',
+          value: 1,
+        },
+        {
+          label: '周',
+          value: 2,
+        },
+        {
+          label: '自定义',
+          value: 3,
+        },
+        {
+          label: '不展示',
+          value: 4,
+        },
+      ],
+    },
   ];
 
   return (
     <ProTable<GithubIssueItem>
       columns={columns}
-      request={async () => {
+      request={async (params) => {
+        console.log(`request params:`, params);
         return {
           data: [
             {
@@ -140,25 +145,17 @@ export default () => {
       headerTitle="动态自定义搜索栏"
       search={{
         defaultCollapsed: false,
-        optionRender: ({ searchText, resetText }, { form }) => [
+        optionRender: (searchConfig, formProps, dom) => [
+          ...dom.reverse(),
           <Button
-            key="search"
-            type="primary"
+            key="out"
             onClick={() => {
-              form?.submit();
+              const values = searchConfig?.form?.getFieldsValue();
+              console.log(values);
             }}
           >
-            {searchText}
+            导出
           </Button>,
-          <Button
-            key="rest"
-            onClick={() => {
-              form?.resetFields();
-            }}
-          >
-            {resetText}
-          </Button>,
-          <Button key="out">导出</Button>,
         ],
       }}
       toolBarRender={() => [

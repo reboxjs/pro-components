@@ -1,69 +1,50 @@
-import ProFormDatePicker from './components/DatePicker';
-import ProFormDateTimePicker from './components/DateTimePicker';
-import ProFormText from './components/Text';
-import ProFormDateRangePicker from './components/DateRangePicker';
-import ProFormDateTimeRangePicker from './components/DateTimeRangePicker';
-import ProFormTimePicker from './components/TimePicker';
-import ProFormTextArea from './components/TextArea';
-import ProFormCheckbox from './components/Checkbox';
-import ProFormRadio from './components/Radio';
-import ProFormSwitch from './components/Switch';
-import ProFormRate from './components/Rate';
-import ProFormSlider from './components/Slider';
-import ProFormUploadDragger from './components/UploadDragger';
-import ProFormUploadButton from './components/UploadButton';
-import ProFormField from './components/Field';
-import ProFormSelect from './components/Select';
-import ProFormDigit from './components/Digit';
-import ProFormFieldSet, { ProFormFieldSetProps } from './components/FieldSet';
-import ProFormCaptcha, { ProFormCaptchaProps } from './components/Captcha';
-
-import ProForm, { ProFormProps } from './layouts/ProForm';
-import QueryFilter, { BaseQueryFilterProps, QueryFilterProps } from './layouts/QueryFilter';
-import LightFilter from './layouts/LightFilter';
-import StepsForm, { StepFormProps, StepsFormProps } from './layouts/StepsForm';
-import ModalForm, { ModalFormProps } from './layouts/ModalForm';
-import DrawerForm, { DrawerFormProps } from './layouts/DrawerForm';
-import './index.less';
-
+import { ProForm } from './layouts';
+// 兼容代码-----------
+import 'antd/es/drawer/style';
+import 'antd/es/form/style';
+import 'antd/es/modal/style';
+import 'antd/es/rate/style';
+import 'antd/es/row/style';
+import 'antd/es/steps/style';
+import 'antd/es/tabs/style';
+import 'antd/es/upload/style';
+//----------------------
+export { ProFormContext } from '@ant-design/pro-utils';
 export type {
+  FormInstance,
+  FormItemProps,
+  FormProps,
+  LightWrapperProps,
+  ProFormInstance,
+} from './BaseForm';
+export * from './components';
+export type {
+  FormListActionType,
   ProFormCaptchaProps,
-  BaseQueryFilterProps,
-  DrawerFormProps,
-  ModalFormProps,
-  ProFormProps,
-  StepFormProps,
-  StepsFormProps,
-  QueryFilterProps,
+  ProFormCheckboxGroupProps,
+  ProFormColorPickerProps,
+  ProFormColumnsType,
+  ProFormDependencyProps,
+  ProFormDigitProps,
+  ProFormDigitRangeProps,
+  ProFormFieldProps,
   ProFormFieldSetProps,
-};
-export {
-  // controls
-  ProFormDatePicker,
-  ProFormDateRangePicker,
-  ProFormDateTimePicker,
-  ProFormTimePicker,
-  ProFormText,
-  ProFormTextArea,
-  ProFormSwitch,
-  ProFormField,
-  ProFormSelect,
-  ProFormDigit,
-  ProFormCheckbox,
-  ProFormRadio,
-  ProFormRate,
-  ProFormUploadButton,
-  ProFormUploadDragger,
-  ProFormSlider,
-  ProFormFieldSet,
-  ProFormCaptcha,
-  ProFormDateTimeRangePicker,
-  // layouts
-  QueryFilter,
-  LightFilter,
-  StepsForm,
-  DrawerForm,
-  ModalForm,
-};
+  ProFormLayoutType,
+  ProFormListProps,
+  ProFormMoneyProps,
+  ProFormRadioGroupProps,
+  ProFormSelectProps,
+  ProFormSliderProps,
+  ProFormSwitchProps,
+  ProFormUploadButtonProps,
+  ProFormUploadDraggerProps,
+} from './components';
+export { FieldContext } from './FieldContext';
+export { FormListContext } from './components/List';
+export type {
+  LightFilterFooterRender,
+  ProFormFieldItemProps as ProFormItemProps,
+} from './interface';
+export * from './layouts';
 
 export default ProForm;

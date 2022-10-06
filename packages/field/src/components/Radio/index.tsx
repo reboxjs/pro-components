@@ -1,25 +1,27 @@
-﻿import React, { useContext, useImperativeHandle, useRef } from 'react';
-import { Radio, ConfigProvider, Spin } from 'antd';
+import { useStyle } from '@ant-design/pro-utils';
+import type { RadioGroupProps } from 'antd';
+import { ConfigProvider, Radio, Spin } from 'antd';
 import classNames from 'classnames';
-import { RadioGroupProps } from 'antd/lib/radio';
-import { ProFieldFC } from '../../index';
-
-import './index.less';
-import { FieldSelectProps, ObjToMap, proFieldParsingText, useFieldFetchData } from '../Select';
-
+import React, { useContext, useImperativeHandle, useRef } from 'react';
+import type { ProFieldFC } from '../../index';
+import type { FieldSelectProps } from '../Select';
+import { ObjToMap, proFieldParsingText, useFieldFetchData } from '../Select';
+// 兼容代码-----------
+import 'antd/es/radio/style';
+//------------
 export type GroupProps = {
-  layout?: 'horizontal' | 'vertical';
   options?: RadioGroupProps['options'];
-  radioType?: 'button' | 'radio';
+  radioType?: RadioGroupProps['optionType'];
 } & FieldSelectProps;
 
 /**
  * 单选组件
+ *
  * @param param0
  * @param ref
  */
 const FieldRadio: ProFieldFC<GroupProps> = (
-  { layout = 'horizontal', radioType, renderFormItem, mode, render, ...rest },
+  { radioType, renderFormItem, mode, render, ...rest },
   ref,
 ) => {
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
@@ -32,6 +34,18 @@ const FieldRadio: ProFieldFC<GroupProps> = (
     fetchData: () => fetchData(),
   }));
 
+  // css
+  const { wrapSSR, hashId } = useStyle('FieldRadioRadio', (token) => {
+    return {
+      [`.${layoutClassName}-vertical`]: {
+        [`${token.antCls}-radio-wrapper`]: {
+          display: 'block',
+          marginInlineEnd: 0,
+        },
+      },
+    };
+  });
+
   if (loading) {
     return <Spin size="small" />;
   }
@@ -39,7 +53,7 @@ const FieldRadio: ProFieldFC<GroupProps> = (
   if (mode === 'read') {
     const optionsValueEnum = options?.length
       ? options?.reduce((pre: any, cur) => {
-          return { ...pre, [cur.value]: cur.label };
+          return { ...pre, [cur.value ?? '']: cur.label };
         }, {})
       : undefined;
     const dom = <>{proFieldParsingText(rest.text, ObjToMap(rest.valueEnum || optionsValueEnum))}</>;
@@ -51,30 +65,18 @@ const FieldRadio: ProFieldFC<GroupProps> = (
   }
 
   if (mode === 'edit') {
-    const RadioComponents = radioType === 'button' ? Radio.Button : Radio;
-    const dom = (
+    const dom = wrapSSR(
       <Radio.Group
         ref={radioRef}
+        optionType={radioType}
         {...rest.fieldProps}
-        className={classNames(rest.fieldProps?.className, `${layoutClassName}-${layout}`)}
-        options={undefined}
-      >
-        {options
-          ?.map((option) => {
-            if (typeof option === 'string') {
-              return {
-                label: option,
-                value: option,
-              };
-            }
-            return option;
-          })
-          .map((item) => (
-            <RadioComponents key={item.value} {...item}>
-              {item.label}
-            </RadioComponents>
-          ))}
-      </Radio.Group>
+        className={classNames(
+          rest.fieldProps?.className,
+          hashId,
+          `${layoutClassName}-${rest.fieldProps.layout || 'horizontal'}`,
+        )}
+        options={options}
+      />,
     );
     if (renderFormItem) {
       return renderFormItem(rest.text, { mode, ...rest.fieldProps }, dom) || null;

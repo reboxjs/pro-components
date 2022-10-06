@@ -1,18 +1,21 @@
 import pathToRegexp from 'path-to-regexp';
-import { MenuDataItem } from './typings';
-import { ProSettings } from './defaultSettings';
+import type { ProSettings } from './defaultSettings';
+import type { MenuDataItem } from './typings';
 
+type BreadcrumbItem = Omit<MenuDataItem, 'children' | 'routes'> & {
+  routes?: BreadcrumbItem;
+};
 export const matchParamsPath = (
   pathname: string,
-  breadcrumb?: { [path: string]: MenuDataItem },
-  breadcrumbMap?: Map<string, MenuDataItem>,
-): MenuDataItem => {
+  breadcrumb?: Record<string, BreadcrumbItem>,
+  breadcrumbMap?: Map<string, BreadcrumbItem>,
+): BreadcrumbItem => {
   // Internal logic use breadcrumbMap to ensure the order
   // 内部逻辑使用 breadcrumbMap 来确保查询顺序
   if (breadcrumbMap) {
     const pathKey = [...breadcrumbMap.keys()].find((key) => pathToRegexp(key).test(pathname));
     if (pathKey) {
-      return breadcrumbMap.get(pathKey) as MenuDataItem;
+      return breadcrumbMap.get(pathKey) as BreadcrumbItem;
     }
   }
 
@@ -31,24 +34,25 @@ export const matchParamsPath = (
   };
 };
 
-export interface GetPageTitleProps {
+export type GetPageTitleProps = {
   pathname?: string;
-  breadcrumb?: { [path: string]: MenuDataItem };
-  breadcrumbMap?: Map<string, MenuDataItem>;
+  breadcrumb?: Record<string, BreadcrumbItem>;
+  breadcrumbMap?: Map<string, BreadcrumbItem>;
   menu?: ProSettings['menu'];
   title?: ProSettings['title'];
   pageName?: string;
   formatMessage?: (data: { id: any; defaultMessage?: string }) => string;
-}
+};
 
 /**
- * 获取关于 pageTile 的所有信息方便包装
+ * 获取关于 pageTitle 的所有信息方便包装
+ *
  * @param props
- * @param ignoreTile
+ * @param ignoreTitle
  */
-const getPageTitleInfo = (
+export const getPageTitleInfo = (
   props: GetPageTitleProps,
-  ignoreTile?: boolean,
+  ignoreTitle?: boolean,
 ): {
   // 页面标题
   title: string;
@@ -62,12 +66,12 @@ const getPageTitleInfo = (
     breadcrumb,
     breadcrumbMap,
     formatMessage,
-    title = 'Ant Design Pro',
+    title,
     menu = {
       locale: false,
     },
   } = props;
-  const pageTitle = ignoreTile ? '' : title || '';
+  const pageTitle = ignoreTitle ? '' : title || '';
   const currRouterData = matchParamsPath(pathname, breadcrumb, breadcrumbMap);
   if (!currRouterData) {
     return {
@@ -92,7 +96,7 @@ const getPageTitleInfo = (
       pageName: pageTitle,
     };
   }
-  if (ignoreTile || !title) {
+  if (ignoreTitle || !title) {
     return {
       title: pageName,
       id: currRouterData.locale || '',
@@ -106,10 +110,6 @@ const getPageTitleInfo = (
   };
 };
 
-export { getPageTitleInfo };
-
-const getPageTitle = (props: GetPageTitleProps, ignoreTile?: boolean) => {
-  return getPageTitleInfo(props, ignoreTile).title;
+export const getPageTitle = (props: GetPageTitleProps, ignoreTitle?: boolean) => {
+  return getPageTitleInfo(props, ignoreTitle).title;
 };
-
-export default getPageTitle;

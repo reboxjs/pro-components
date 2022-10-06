@@ -1,12 +1,12 @@
-import React, { useRef, useState } from 'react';
+import type { ProColumns, ProFormInstance } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 import { Button } from 'antd';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
-import { FormInstance } from 'antd/lib/form';
+import { useRef, useState } from 'react';
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
-}
+};
 
 const columns: ProColumns<TableListItem>[] = [
   {
@@ -18,12 +18,12 @@ const columns: ProColumns<TableListItem>[] = [
     title: '创建时间',
     key: 'since',
     dataIndex: 'createdAt',
-    valueType: 'dateTime',
+    valueType: 'date',
   },
 ];
 
 export default () => {
-  const ref = useRef<FormInstance>();
+  const ref = useRef<ProFormInstance>();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -62,6 +62,16 @@ export default () => {
           }}
         >
           赋值
+        </Button>,
+        <Button
+          key="submit"
+          onClick={() => {
+            if (ref.current) {
+              ref.current.submit();
+            }
+          }}
+        >
+          提交
         </Button>,
       ]}
       options={false}

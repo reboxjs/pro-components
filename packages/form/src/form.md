@@ -8,105 +8,270 @@ nav:
   path: /components
 ---
 
-# ProForm
+# ProForm 高级表单
 
 ProForm 在原来的 Form 的基础上增加一些语法糖和更多的布局设置，帮助我们快速的开发一个表单。同时添加一些默认行为，让我们的表单默认好用。
 
 分步表单，Modal 表单，Drawer 表单，查询表单，轻量筛选等多种 layout 可以覆盖大部分的使用场景，脱离复杂而且繁琐的表单布局工作，更少的代码完成更多的功能。
 
-ProForm 自带了数量可观的 Field, 这些组件本质上是 FromItem 和 组件的结合，我们可以帮他们当成一个 FromItem 来使用，并且支持各种 `props`。每个 Field 都支持 `fieldProps` 属性来支持设置输入组件的`props`。 我们支持了 `placeholder` 的透传，你可以直接在组件上设置 `placeholder`。
+- 如果你想要设置默认值，请使用 `initialValues`,任何直接使用组件 `value` 和 `onChange` 的方式都有可能导致值绑定失效。
+- 如果想要表单联动或者做一些依赖，可以使用 render props 模式, ProFormDependency 绝对是最好的选择
+- ProForm 的 onFinish 与 antd 的 Form 不同，是个 Promise，如果你正常返回会自动为你设置按钮的加载效果
+- 如果想要监听某个值，建议使用 `onValuesChange`。保持单向的数据流无论对开发者还是维护者都大有裨益
+- ProForm 没有黑科技，只是 antd 的 Form 的封装，如果要使用自定义的组件可以用 Form.Item 包裹后使用，支持混用
 
-## 何时使用
+```tsx | pure
+// 设置整体默认值
+<ProForm initialValues={obj} />
+
+// 设置单个控件的
+<ProForm
+ onValuesChange={(changeValues) => console.log(changeValues)}
+>
+  <ProFormText initialValue="prop"/>
+</ProForm>
+
+// 相互依赖的组件联动
+<ProForm>
+  <Form.Item noStyle shouldUpdate>
+    {(form) => {
+      return (
+        <ProFormSelect
+          options={[
+            {
+              value: "chapter",
+              label: "盖章后生效",
+            },
+          ]}
+          width="md"
+          name="useMode"
+          label={`与${form.getFieldValue("name")}合同约定生效方式`}
+        />
+      );
+    }}
+  </Form.Item>
+</ProForm>;
+
+
+// 使用自定义组件
+<ProForm>
+  <Form.Item name="switch" label="Switch" valuePropName="checked">
+    <Switch />
+  </Form.Item>
+</ProForm>
+```
+
+## 何时使用 ProForm？
 
 当你想快速实现一个表单但不想花太多时间去布局时 ProForm 是最好的选择。
 
+ProForm 是基于 antd Form 的可降级封装，与 antd 功能完全对齐，但是在其之上还增加一些预设行为和多种布局。这些布局之间可以无缝切换，并且拥有公共的 API。
+
+| 布局 | 使用场景 |
+| --- | --- |
+| [ProForm](/components/form#proform) | 标准 Form，增加了 `onFinish` 中自动 `loading` 和 根据 `request` 自动获取默认值的功能。 |
+| [ModalForm\|DrawerForm](/components/modal-form) | 在 ProForm 的基础上增加了 `trigger` ，无需维护 `visible` 状态 |
+| [QueryFilter](/components/query-filter) | 一般用于作为筛选表单，需要配合其他数据展示组件使用 |
+| [LightFilter](/components/query-filter) | 一般用于作为行内内置的筛选，比如卡片操作栏和 表格操作栏。 |
+| [StepsForm](/components/steps-form) | 分步表单，需要配置 StepForm 使用。 |
+
+<code src="./demos/layout-change.tsx" height="709px" title="Form 的 layout 切换"/>
+
+## 数据转化
+
+很多时候组件需要的数据和后端需要的数据之间不能完全匹配，ProForm 为了解决这个问题提供了 `transform` 和 `convertValue` 两个 API 来处理这种情况。
+
+### convertValue 前置转化
+
+convertValue 发生在组件获得数据之前，一般是后端直接给前端的数据，有时需要精加工一下。
+
+```tsx | pure
+   export type SearchConvertKeyFn = (value: any, field: NamePath) => string | Record<string, any>;
+  /**
+   * @name 获取时转化值，一般用于将数据格式化为组件接收的格式
+   * @param value 字段的值
+   * @param namePath 字段的name
+   * @returns 字段新的值
+   *
+   *
+   * @example a,b => [a,b]     convertValue: (value,namePath)=> value.split(",")
+   * @example string => json   convertValue: (value,namePath)=> JSON.parse(value)
+   * @example number => date   convertValue: (value,namePath)=> Moment(value)
+   * @example YYYY-MM-DD => date   convertValue: (value,namePath)=> Moment(value,"YYYY-MM-DD")
+   * @example  string => object   convertValue: (value,namePath)=> { return {value,label:value} }
+   */
+  convertValue?: SearchConvertKeyFn;
+```
+
+### transform 提交时转化
+
+transform 发生在提交的时候，一般来说都是吐给后端的存在数据库里的数据。
+
+为了方便大家使用，`ProFormDependency` 和 `formRef` 都支持了 `transform`，可以获取到被转化后的值。
+
+```tsx | pure
+<ProFormDependency>
+  {(value, form) => {
+    // value 被 transform转化之后的值
+    // form 当前的formRef，可以获取未转化的值
+    return ReactNode;
+  }}
+</ProFormDependency>
+```
+
+formRef 内置了几个方法来获取转化之后的值，这也是相比 antd 的 Form 多的功能，详细可以看 ProFormInstance 的类型定义。
+
+```tsx | pure
+  /** 获取被 ProForm 格式化后的所有数据  */
+  getFieldsFormatValue?: (nameList?: true) => T;
+  /** 获取格式化之后的单个数据 */
+  getFieldFormatValue?: (nameList?: NamePath) => T;
+  /** 获取格式化之后的单个数据 */
+  getFieldFormatValueObject?: (nameList?: NamePath) => T;
+  /** 验字段后返回格式化之后的所有数据*/
+  validateFieldsReturnFormatValue?: (nameList?: NamePath[]) => Promise<T>;
+```
+
+```tsx | pure
+  export type SearchTransformKeyFn = (
+    value: any,
+    namePath: string,
+    allValues: any,
+  ) => string | Record<string, any>;
+
+  /**
+   * @name 提交时转化值，一般用于将值转化为提交的数据
+   * @param value 字段的值
+   * @param namePath 字段的name
+   * @param allValues 所有的字段
+   * @returns 字段新的值，如果返回对象，会和所有值 merge 一次
+   *
+   * @example {name:[a,b] => {name:a,b }    transform: (value,namePath,allValues)=> value.join(",")
+   * @example {name: string => { newName:string }    transform: (value,namePath,allValues)=> { newName:value }
+   * @example {name:moment} => {name:string transform: (value,namePath,allValues)=> value.format("YYYY-MM-DD")
+   * @example {name:moment}=> {name:时间戳} transform: (value,namePath,allValues)=> value.valueOf()
+   * @example {name:{value,label}} => { name:string} transform: (value,namePath,allValues)=> value.value
+   * @example {name:{value,label}} => { valueName,labelName  } transform: (value,namePath,allValues)=> { valueName:value.value, labelName:value.name }
+   */
+  transform?: SearchTransformKeyFn;
+```
+
 ## 代码示例
-
-### 登录
-
-<code src="./demos/login.tsx" height="300px"/>
 
 ### 基本使用
 
-<code src="./demos/base.tsx" height="548px"/>
+<code src="./demos/base.tsx" height="974px" title="基本使用"/>
 
-### 分步表单
+### 标签与表单项布局
 
-<code src="./demos/steps-from.tsx" height="532px"/>
+除了 `LightFilter` 和 `QueryFilter` 这样固定布局的表单样式，其他表单布局支持配置与 `antd` 一致的三种布局方式。
 
-### 分步表单-多卡片
+<code src="./demos/form-layout.tsx" title="标签与表单项布局" height="337px"/>
 
-<code src="./demos/multi-card-step-form.tsx"  background="#f5f5f5" height="868px"/>
+### 栅格化布局
 
-### 分步表单-与 model 配合使用
+同时支持在 `ProForm`, `SchemaForm`, `ModalForm`, `DrawerForm`, `StepsForm` 中使用
 
-<code src="./demos/modal-step-form.tsx"  background="#f5f5f5" height="32px"/>
+<code src="./demos/form-layout-grid.tsx" title="栅格化布局" height="437px"/>
 
-### Modal 表单
+### 表单联动
 
-<code src="./demos/modal-form.tsx"  background="#f5f5f5"  height="32px"/>
+<code src="./demos/dependency.tsx" height="457px" title="表单联动"/>
 
-### Drawer 表单
+### 表单方法调用
 
-<code src="./demos/drawer-form.tsx"  background="#f5f5f5" height="32px"/>
+你可以通过 `formRef` 获取到表单实例的引用，通过引用可以调用表单方法实现表单重置，设置表单，获取表单值等功能。
 
-### 查询筛选
+<code src="./demos/formRef.tsx" height="341px" title="表单方法调用"/>
 
-<code src="./demos/query-filter.tsx" height="168px"/>
+### 同步提交结果到 url
 
-### 查询筛选-默认收起
+打开时也会把 url 的参数设置为默认值，支持 transform, 但是要注意字段的映射。
 
-<code src="./demos/query-filter-collapsed.tsx" height="56px"/>
+<code src="./demos/sync-to-url.tsx" height="371px" title="同步提交结果到 url"/>
 
-### 查询筛选-垂直布局
+### 金额
 
-<code src="./demos/query-filter-vertical.tsx"  height="172px"/>
-
-### 查询筛选-搜索
-
-<code src="./demos/search-filter.tsx" background="#f0f2f5" height="274px"/>
-
-### 轻量筛选
-
-<code src="./demos/light-filter.tsx" height="86px"/>
-
-### 轻量筛选-边框模式
-
-<code src="./demos/light-filter-bordered.tsx" height="32px" />
-
-### 轻量筛选-折叠模式
-
-折叠模式下所有的选项都会默认折叠，不管是否有值，控件的 `secondary` 将不再有效。
-
-<code src="./demos/light-filter-collapse.tsx" height="40px"/>
+<code src="./demos/money.tsx" height="629px" title="金额"/>
 
 ### 固定页脚
 
-<code src="./demos/layout-base.tsx" height="764px"/>
+<code src="./demos/layout-footer.tsx" height="500px" iframe="874px" title="固定页脚"/>
 
-### 混合使用
+### ProForm 和 EditableTable 同时使用
 
-<code src="./demos/components-other.tsx" heigh="1774px"/>
+<code src="./demos/pro-form-editableTable.tsx" height="534px" title="ProForm 和 EditableTable 同时使用"/>
 
-### 只读模式
+<code src="./demos/linkage-customization.tsx" height="1774px" debug/>
 
-<code src="./demos/components-other-readonly.tsx" heigh="1774px" debug/>
+<code src="./demos/pro-form-dependency.debug.tsx" height="548px" title="formRef的使用" debug />
+<code src="./demos/label-col.tsx" height="548px"  debug />
 
-## Layouts API
+## ProForm
 
-### ProForm
+ProForm 是 antd Form 的再封装，如果你想要自定义表单元素，ProForm 与 antd 的方法是相同的，你仍然可以用 FormItem + 自定义组件的方式来自定义。当然这样不会影响到别的组件，QueryFilter 等组件同理。
 
-ProForm 是 antd Form 的在封装，如果你想要自定义表单元素，ProForm 与 antd 的方法是相同的，你仍然可以用 FormItem + 自定义组件的方式来自定义。当然这样不会影响到别的组件，QueryFilter 等组件同理。
-
-> antd 的 From api 查看[这里](https://ant.design/components/form-cn/)
+> antd 的 Form api 查看[这里](https://ant.design/components/form-cn/) initialValues 相关知识查看[这里](https://procomponents.ant.design/docs/faq)
 
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
 | onFinish | 提交表单且数据验证成功后回调事件，同 antd 4 `Form` 组件 API | `(values)=>Promise<void>` | - |
-| onReset | 点击重置按钮的回调，设置后重置按钮才会被渲染 | `(e)=>void` | - |
+| onReset | 点击重置按钮的回调 | `(e)=>void` | - |
 | submitter | 提交按钮相关配置 | `boolean` \| `SubmitterProps` | `true` |
-| dateFormatter | 自动格式数据,主要是 moment 的表单,支持 string 和 number 两种模式 | `string\| number \|false` | string |
-| [(...)](https://ant.design/components/form-cn/) | 支持除 `wrapperCol` \| `labelCol` \| `layout` 外的其他 antd `Form` 组件参数 | - | - |
+| syncToUrl | 同步参数到 url 上,url 只支持 string，在使用之前最好读一下[url 中的参数类型](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) | `true` \| `(values,type)=>values` | - |
+| syncToInitialValues | 同步结果到 initialValues,默认为 true 如果为 false，form.reset 的时将会忽略从 url 上获取的数据 | `boolean` | `true` |
+| dateFormatter | 自动格式数据,主要是 moment 的表单,支持 string 和 number 两种模式，此外还支持指定函数进行格式化。 | `string\| number \| ((value: Moment, valueType: string) => string \| number) \| false` | string |
+| omitNil | ProForm 会自动清空 null 和 undefined 的数数据，如果你约定了 nil 代表某种数据，可以设置为 false 关闭此功能 | `boolean` | true |
+| params | 发起网络请求的参数,与 request 配合使用 | `Record` | - |
+| request | 发起网络请求的参数,返回值会覆盖给 initialValues | `(params)=>Promise<data>` | - |
+| isKeyPressSubmit | 是否使用回车提交 | `boolean` | - |
+| formRef | 获取表单所使用的 form | `React.MutableRefObject<ProFormInstance<T>>` | - |
+| autoFocusFirstInput | 自动 focus 表单第一个输入框 | `boolean` | - |
+| `grid` | 开启栅格化模式，宽度默认百分比，请使用 `colProps` 控制宽度 [查看示例](/components/form#栅格化布局) | `boolean` | - |
+| rowProps | 开启 `grid` 模式时传递给 `Row`, 仅在`ProFormGroup`, `ProFormList`, `ProFormFieldSet` 中有效 | [RowProps](https://ant.design/components/grid/#Row) | { gutter: 8 } |
+| [(...)](https://ant.design/components/form-cn/) | 注意 `LightFilter` 和 `QueryFilter` 仅支持除 `wrapperCol` \| `labelCol` \| `layout` 外的其他 antd `Form` 组件参数 | - | - |
+
+### ProFormInstance
+
+ProFormInstance 与 antd 的 form 相比增加了一些能力。
+
+```tsx | pure
+  /**
+   * 获取被 ProForm 格式化后的所有数据
+   * @param nameList boolean
+   * @returns T
+   *
+   * @example  getFieldsFormatValue() ->返回所有数据
+   * @example  getFieldsFormatValue(true) ->返回所有数据，即使没有被 form 托管的
+   */
+  getFieldsFormatValue?: (nameList?: true) => T;
+  /**
+   * 获取被 ProForm 格式化后的单个数据
+   * @param nameList (string|number)[]
+   * @returns T
+   *
+   * @example {a:{b:value}} -> getFieldFormatValue(['a', 'b']) -> value
+   */
+  /** 获取格式化之后的单个数据 */
+  getFieldFormatValue?: (nameList?: NamePath) => T;
+  /**
+   * 获取被 ProForm 格式化后的单个数据, 包含他的 name
+   * @param nameList (string|number)[]
+   * @returns T
+   *
+   * @example  {a:{b:value}} -> getFieldFormatValueObject(['a', 'b']) -> {a:{b:value}}
+   */
+  /** 获取格式化之后的单个数据 */
+  getFieldFormatValueObject?: (nameList?: NamePath) => T;
+  /**
+   *验字段后返回格式化之后的所有数据
+   * @param nameList (string|number)[]
+   * @returns T
+   *
+   * @example validateFieldsReturnFormatValue -> {a:{b:value}}
+   */
+  validateFieldsReturnFormatValue?: (nameList?: NamePath[]) => Promise<T>;
+```
 
 ### ProForm.Group
 
@@ -117,7 +282,7 @@ ProForm 是 antd Form 的在封装，如果你想要自定义表单元素，ProF
 
 #### submitter
 
-虽然我们希望不要对 submitter 进行修改，但是在使用中修改时很常见的需求，ProForm 的各个组件都使用了同样的 API 来支持需求。
+虽然我们希望不要对 submitter 进行修改，但在使用中修改是很常见的需求，ProForm 的各个组件都使用了同样的 API 来支持需求。
 
 | 参数 | 说明 | 类型 | 默认值 |
 | --- | --- | --- | --- |
@@ -139,401 +304,125 @@ ProForm 是 antd Form 的在封装，如果你想要自定义表单元素，ProF
       submitText: '提交',
     },
     // 配置按钮的属性
-    resetButtonProps: {},
+    resetButtonProps: {
+      style: {
+        // 隐藏重置按钮
+        display: 'none',
+      },
+    },
     submitButtonProps: {},
 
     // 完全自定义整个区域
     render: (props, doms) => {
-      return (
-        <button type="button" id="rest" onClick={() => props?.onReset?.()}>
-          rest
-        </button>
-      );
+      console.log(props);
+      return [
+        <button type="button" key="rest" onClick={() => props.form?.resetFields()}>
+          重置
+        </button>,
+        <button type="button" key="submit" onClick={() => props.form?.submit?.()}>
+          提交
+        </button>,
+      ];
     },
   }}
 />
 ```
 
-### QueryFilter
+### formRef
 
-QueryFilter 除了继承 ProForm 的 API 以外还支持下面的属性。
+该属性是 ProForm 在原有的 Antd 的 `FormInstance` 的基础上做的一个上层分装，增加了一些更加便捷的方法。使用方式如下：
 
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| collapsed | 是否折叠超出的表单项，用于受控模式 | `boolean` | - |
-| defaultCollapsed | 默认状态下是否折叠超出的表单项 | `boolean` | true |
-| onCollapse | 切换表单折叠状态时的回调 | `(collapsed)=>void` | - |
-| hideRequiredMark | 隐藏所有表单项的必选标记，**默认隐藏** | `boolean` | true |
-| defaultColsNumber | 自定义折叠状态下默认显示的表单控件数量，没有设置或小于 0，则显示一行控件; 数量大于等于控件数量则隐藏展开按钮 | `number` | - |
-| labelWidth | label 宽度 | `number` \| `'auto'` | `98` |
-| span | 表单项宽度 | `number[0 - 24]` | - |
-| split | 每一行是否有分割线 | `boolean` | - |
-
-#### 响应式断点规则
-
-注意，断点的值均为表单容器的大小而非视口大小。
-
-##### 默认布局时的规则
-
-| 容器宽度断点          | 单行展示表单列数（包含操作区域） | 默认布局     |
-| --------------------- | -------------------------------- | ------------ |
-| `≧ 1352px`            | 4 列                             | `horizontal` |
-| `≧ 1062px`            | 3 列                             | `horizontal` |
-| `≧ 701px && < 1063px` | 3 列                             | `horizontal` |
-| `≧ 513px && < 701px`  | 2 列                             | `vertical`   |
-| `< 513px`             | 1 列                             | `vertical`   |
-
-##### 强制上下布局时的规则
-
-| 容器宽度断点          | 单行展示表单列数（包含操作区域） |
-| --------------------- | -------------------------------- |
-| `≧ 1057px`            | 4 列                             |
-| `≧ 785px && < 1057px` | 3 列                             |
-| `≧ 513px && < 785px`  | 2 列                             |
-| `< 513px`             | 1 列                             |
-
-### LightFilter
-
-LightFilter 除了继承 ProForm 的 API 以外还支持下面的属性。
-
-| 参数          | 说明                 | 类型        | 默认值                     |
-| ------------- | -------------------- | ----------- | -------------------------- |
-| collapse      | 是否默认折叠全部字段 | `boolean`   | `false`                    |
-| collapseLabel | 折叠区域的标签       | `ReactNode` | `更多筛选 <DownOutlined/>` |
-
-### StepsForm
-
-StepsForm 本质上是一个 Provider ，增加步骤条和一些相关的 API。
-
-> Form.Provider 的文档可以看[这里](https://ant.design/components/form-cn/#Form.Provider),转化 moment 的值是 ProForm 提供的功能，所以 `onFormFinish` 和 `onFormChange` 其中的值都是未经转化的
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| current | 当前表单的步骤数，从 `0` 开始 | `number` | 0 |
-| onCurrentChange | current 发生改变的事件 | `(current:number)=>void` | - |
-| onFinish | 表单最后一步提交成功触发 | `(values:T)=>void` | - |
-| stepsProps | StepsForm 自带的 Steps 的 props，使用方式与 [antd](https://ant.design/components/steps-cn/) 相同，但是去掉了 current 和 onChange | [props](https://ant.design/components/steps-cn/#API) | - |
-| stepFormRender | 自定义当前展示的表单，返回 dom 在表单内部 | `(form) => ReactNode` | - |
-| stepsFormRender | 自定义整个表单区域，返回的 dom 在表单的外部 | `(form,submitter) => ReactNode` | - |
-| stepsRender | 自定义步骤器 | `(steps,dom)=>ReactNode` | - |
-
-#### StepForm
-
-与 ProForm 完全相同，只是 onFinish 支持了 Promise，如果返回 `false`, 就不会跳转下一步。
-
-| onFinish | 表单提交成功触发 | `(values:T)=>Promise<false>` | - |
-
-### ModalForm
-
-ModalForm 组合了 Modal 和 ProForm 可以减少繁琐的状态管理。
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| trigger | 用于触发 Modal 打开的 dom，一般是 button | `ReactNode` | - |
-| visible | 是否打开 | `boolean` | - |
-| onVisibleChange | visible 改变时触发 | `(visible:boolean)=>void` | - |
-| modalProps | Modal 的 props，使用方式与 [antd](https://ant.design/components/modal-cn/) 相同，但是去掉了 current 和 onChange | [props](https://ant.design/components/modal-cn/#API) | - |
-| title | 弹框的标题 | `ReactNode` | - |
-| width | 弹框的宽度 | `Number` | - |
-| onFinish | 提交数据时触发，如果返回一个 true，会关掉弹框并且重置表单 | `async (values)=>boolean | void` | - |
-
-### DrawerForm
-
-DrawerForm 组合了 Drawer 和 ProForm 可以减少繁琐的状态管理。
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| trigger | 用于触发 Modal 打开的 dom，一般是 button | `ReactNode` | - |
-| visible | 是否打开 | `boolean` | - |
-| onVisibleChange | visible 改变时触发 | `(visible:boolean)=>void` | - |
-| drawerProps | Modal 的 props，使用方式与 [antd](https://ant.design/components/modal-cn/) 相同，但是去掉了 current 和 onChange | [props](https://ant.design/components/modal-cn/#API) | - |
-| title | 抽屉的标题 | `ReactNode` | - |
-| width | 抽屉的宽度 | `Number` | - |
-| onFinish | 提交数据时触发，如果返回一个 true，会关掉抽屉并且重置表单 | `async (values)=>boolean | void` | - |
-
-## Fields API
-
-ProForm 自带的 Filed ,与 valueType 基本上一一对应。
-
-### 通用的属性
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| width | Field 的长度，我们归纳了常用的 Field 长度以及适合的场景，支持了一些枚举 "xs" , "s" , "m" , "l" , "x" | `number \| "xs" \| "s" \| "m" \| "l" \| "x"` | - |
-| tooltip | 会在 label 旁增加一个 icon，悬浮后展示配置的信息 | `string \| tooltipProps` | - |
-| secondary | 是否是次要控件，只针对 LightFilter 下有效 | `boolean` | `false` |
-| allowClear | 支持清除，针对 LightFilter 下有效，主动设置情况下同时也会透传给 `fieldProps` | `boolean` | `true` |
-
-### 宽度
-
-在某些场景下，我们需要根据页面展示效果对输入框进行自适应处理，除此以外一个表单区域应默认使用定宽规则。
-
-![width info](https://gw.alipayobjects.com/zos/antfincdn/CyJPTSL07y/1574664269794-254db9de-2574-4361-bcf1-b82c6db0c80a.png)
-
-- XS=104px 适用于短数字、短文本或选项。
-- S=216px 适用于较短字段录入、如姓名、电话、ID 等。
-- M=328px 标准宽度，适用于大部分字段长度。
-- L=440px 适用于较长字段录入，如长网址、标签组、文件路径等。
-- XL=552px 适用于长文本录入，如长链接、描述、备注等，通常搭配自适应多行输入框或定高文本域使用。
-
-### ProFormText
-
-与 [Input](https://ant.design/components/input-cn/) 相同。
+<code src="./demos/formRef.tsx" height="341px" title="formRef的使用"/>
 
 ```tsx | pure
-<ProFormText name="text" label="名称" placeholder="请输入名称" fieldProps={inputProps} />
+import type { ProFormInstance } from '@ant-design/pro-components';
+import { ProForm, ProFormDatePicker, ProFormText } from '@ant-design/pro-components';
+import { Button, message } from 'antd';
+import moment from 'dayjs';
+import { useRef } from 'react';
+
+const waitTime = (time: number = 100) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(true);
+    }, time);
+  });
+};
+
+export default () => {
+  const formRef = useRef<ProFormInstance>();
+  const onFill = () => {
+    formRef?.current?.setFieldsValue({
+      name: '张三',
+      company: '蚂蚁金服',
+    });
+  };
+
+  const getCompanyName = () => {
+    message.info(`公司名称为 "${formRef?.current?.getFieldValue('company')}"`);
+  };
+
+  const getFormatValues = () => {
+    console.log('格式化后的所有数据：', formRef.current?.getFieldsFormatValue?.());
+  };
+
+  const validateAndGetFormatValue = () => {
+    formRef.current?.validateFieldsReturnFormatValue?.().then((values) => {
+      console.log('校验表单并返回格式化后的所有数据：', values);
+    });
+  };
+
+  return (
+    <ProForm
+      title="新建表单"
+      formRef={formRef}
+      submitter={{
+        render: (props, doms) => {
+          return [
+            ...doms,
+            <Button htmlType="button" onClick={onFill} key="edit">
+              一键填写
+            </Button>,
+            <Button htmlType="button" onClick={getCompanyName} key="read">
+              读取公司
+            </Button>,
+            <Button.Group key="refs" style={{ display: 'block' }}>
+              <Button htmlType="button" onClick={getFormatValues} key="format">
+                获取格式化后的所有数据
+              </Button>
+              <Button htmlType="button" onClick={validateAndGetFormatValue} key="format2">
+                校验表单并返回格式化后的所有数据
+              </Button>
+            </Button.Group>,
+          ];
+        },
+      }}
+      onFinish={async (values) => {
+        await waitTime(2000);
+        console.log(values);
+        message.success('提交成功');
+        return true;
+      }}
+    >
+      <ProFormText
+        width="md"
+        name="name"
+        label="签约客户名称"
+        tooltip="最长为 24 位"
+        placeholder="请输入名称"
+      />
+
+      <ProFormText width="md" name="company" label="我方公司名称" placeholder="请输入名称" />
+      <ProFormDatePicker name="date" initialValue={moment('2021-08-09')} />
+    </ProForm>
+  );
+};
 ```
 
-### ProFormText.Password
+`ProFormInstance`在原先`FormInstance`的基础上增加了如下方法：
 
-与 [Input.Password](https://ant.design/components/input-cn/#Input.Password) 相同。
-
-```tsx | pure
-<ProFormText.Password label="InputPassword" name="input-password" />
-```
-
-### ProFormDatePicker
-
-与 [DatePicker](https://ant.design/components/date-picker-cn/) 相同。
-
-```tsx | pure
-<ProFormDatePicker name="date" label="日期" />
-```
-
-### ProFormDateTimePicker
-
-与 [DatePicker](https://ant.design/components/date-picker-cn/) 相同。
-
-```tsx | pure
-<ProFormDateTimePicker name="datetime" label="日期" />
-```
-
-### ProFormDateRangePicker
-
-与 [DatePicker](https://ant.design/components/date-picker-cn/) 相同。
-
-```tsx | pure
-<ProFormDateRangePicker name="dateRange" label="日期" />
-```
-
-### ProFormDateTimeRangePicker
-
-与 [DatePicker](https://ant.design/components/date-picker-cn/) 相同。
-
-```tsx | pure
-<ProFormDateRangePicker name="datetimeRange" label="日期" />
-```
-
-### ProFormTimePicker
-
-与 [DatePicker](https://ant.design/components/date-picker-cn/) 相同
-
-```tsx | pure
-<ProFormDateRangePicker name="time" label="时间" />
-```
-
-### ProFormTextArea
-
-与 [Input](https://ant.design/components/input-cn/) 相同。
-
-```tsx | pure
-<ProFormTextArea
-  name="text"
-  label="名称"
-  placeholder="请输入名称"
-  fieldProps={inputTextAreaProps}
-/>
-```
-
-### ProFormCheckbox
-
-> 请求远程数据比较复杂，详细可以看[这里](/components/field#远程数据)。
-
-与 [checkbox](https://ant.design/components/checkbox-cn/) 相同，但是支持了 `options` 与 `layout`。
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| options | 与 select 相同，根据 options 生成子节点，推荐使用。 | `string[]` \| `{label:ReactNode,value:string}[]` | - |
-| layout | 配置 checkbox 的样子，支持垂直`vertical` 和 `horizontal` | `horizontal` \| `vertical` | - |
-
-```tsx | pure
-<ProFormCheckbox.Group
-  name="checkbox"
-  layout="vertical"
-  label="行业分布"
-  options={['农业', '制造业', '互联网']}
-/>
-```
-
-### ProFormRadio.Group
-
-> 请求远程数据比较复杂，详细可以看[这里](/components/field#远程数据)。
-
-与 [radio](https://ant.design/components/radio-cn/) 相同，但是支持了 `options`。
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| options | 与 select 相同，根据 options 生成子节点，推荐使用。 | `string[]` \| `{label:ReactNode,value:string}[]` | - |
-| radioType | 设置是按钮模式还是 radio 模式 | `button`\|`radio` | `radio` |
-
-```tsx | pure
-<ProFormRadio.Group
-  name="radio-group"
-  label="Radio.Group"
-  options={[
-    {
-      label: 'item 1',
-      value: 'a',
-    },
-    {
-      label: 'item 2',
-      value: 'b',
-    },
-    {
-      label: 'item 3',
-      value: 'c',
-    },
-  ]}
-/>
-```
-
-### ProFormSwitch
-
-与 [switch](https://ant.design/components/switch-cn/) 相同。
-
-```tsx | pure
-<ProFormSwitch name="switch" label="Switch" />
-```
-
-### ProFormRate
-
-与 [rate](https://ant.design/components/rate-cn/) 相同。
-
-```tsx | pure
-<ProFormRate name="rate" label="Rate" />
-```
-
-### ProFormSlider
-
-与 [slider](https://ant.design/components/slider-cn/) 相同。
-
-```tsx | pure
-<ProFormSlider
-  name="slider"
-  label="Slider"
-  marks={{
-    0: 'A',
-    20: 'B',
-    40: 'C',
-    60: 'D',
-    80: 'E',
-    100: 'F',
-  }}
-/>
-```
-
-### ProFormUploadDragger
-
-与 [upload](https://ant.design/components/upload-cn/) 相同。预设了 Dragger 的样式，其他与 Upload 相同。
-
-| 参数        | 说明             | 类型        | 默认值                           |
-| ----------- | ---------------- | ----------- | -------------------------------- |
-| icon        | Dragger 的图表。 | `ReactNode` | InboxOutlined                    |
-| title       | Dragger 的标题   | `ReactNode` | '单击或拖动文件到此区域进行上传' |
-| description | Dragger 的描述   | `ReactNode` | '支持单次或批量上传'             |
-
-```tsx | pure
-<ProFormUploadDragger label="Dragger" name="dragger" action="upload.do" />
-```
-
-### ProFormUploadButton
-
-与 [upload](https://ant.design/components/upload-cn/) 相同。预设了 Button 的样式，其他与 Upload 相同。
-
-| 参数  | 说明             | 类型        | 默认值         |
-| ----- | ---------------- | ----------- | -------------- |
-| icon  | Dragger 的图表。 | `ReactNode` | UploadOutlined |
-| title | Dragger 的标题   | `ReactNode` | 单击上传       |
-
-```tsx | pure
-<ProFormUploadButton label="upload" name="upload" action="upload.do" />
-```
-
-### ProFormSelect
-
-与 [select](https://ant.design/components/select-cn/) 相同。支持了 request 和 valueEnum 两种方式来生成 options。
-
-> 请求远程数据比较复杂，详细可以看[这里](/components/field#远程数据)。
-
-> 有了 options 为什么要支持 valueEnum 呢？ valueEnum 可以与 table，descriptions 共用，在工程化上有优势。
-
-| 参数 | 说明 | 类型 | 默认值 |
-| --- | --- | --- | --- |
-| valueEnum | 当前列值的枚举 [valueEnum](/components/table#valueenum) | `{[key:string`\|`number]:any}` | - |
-| request | 从网络请求枚举数据 | `()=>Promise<{[key:string`\|`number]:any}>` | - |
-
-```tsx | pure
-<>
-  <ProFormSelect
-    name="select"
-    label="Select"
-    hasFeedback
-    valueEnum={{
-      open: '未解决',
-      closed: '已解决',
-    }}
-    placeholder="Please select a country"
-    rules={[{ required: true, message: 'Please select your country!' }]}
-  />
-
-  <ProFormSelect
-    name="select2"
-    label="Select"
-    hasFeedback
-    request={async () => [
-      { label: '全部', value: 'all' },
-      { label: '未解决', value: 'open' },
-      { label: '已解决', value: 'closed' },
-      { label: '解决中', value: 'processing' },
-    ]}
-    placeholder="Please select a country"
-    rules={[{ required: true, message: 'Please select your country!' }]}
-  />
-</>
-```
-
-### ProFormDigit
-
-与 [inputNumber](https://ant.design/components/input-number-cn/) 相同。它自带了一个格式化(保留 2 位小数，最小值为 0)，有需要你可以关掉它。
-
-```tsx | pure
-<ProFormDigit label="InputNumber" name="input-number" min={1} max={10} />
-```
-
-如果要修改小数位数：
-
-```tsx | pure
-<ProFormDigit
-  label="InputNumber"
-  name="input-number"
-  min={1}
-  max={10}
-  fieldProps={{ precision: 0 }}
-/>
-```
-
-### ProFormFieldSet
-
-ProFormFieldSet 可以将内部的多个 children 的值组合并且存储在 ProForm 中，并且可以通过 `transform` 在提交时转化。下面是一个简单的用法,可以方便的组合多个输入框，并且格式化为想要的数据。
-
-```tsx | pure
-<ProFormFieldSet
-  name="list"
-  label="组件列表"
-  transform={(value: any) => ({ startTime: value[0], endTime: value[1] })}
->
-  <ProFormText width="m" />
-  <ProFormText width="m" />
-  <ProFormText width="m" />
-</ProFormFieldSet>
-```
+| 方法名 | 使用描述 | 备注 |
+| :-: | :-: | :-: |
+| `getFieldsFormatValue` | 使用方法与`FormInstance`的`getFieldsValue`方法相同，将返回格式化后的所有数据 |  |
+| `getFieldFormatValue` | 使用方法与`FormInstance`的`getFieldValue`方法相同，将返回格式化后的指定数据 |  |
+| `validateFieldsReturnFormatValue` | 使用方法与`FormInstance`的`validateFields`方法相同，验证通过后将返回格式化后的所有数据 |  |

@@ -1,6 +1,7 @@
-import React, { useState, ReactText } from 'react';
-import { Progress, Button, Select } from 'antd';
-import ProList from '@ant-design/pro-list';
+import { ProList } from '@ant-design/pro-components';
+import { Button, Progress, Select } from 'antd';
+import type { ReactText } from 'react';
+import { useState } from 'react';
 
 const dataSource = [
   {
@@ -27,7 +28,7 @@ const dataSource = [
 
 export default () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<ReactText[]>([]);
-  const [expandedRowKeys, setExpandedRowKeys] = useState<ReactText[]>([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<readonly ReactText[]>([]);
   const [size, setSize] = useState<'small' | 'default' | 'large' | undefined>('default');
   const [split, setSplit] = useState<0 | 1>(1);
   const rowSelection = {
@@ -104,7 +105,7 @@ export default () => {
           },
           actions: {
             render: () => {
-              return [<a>邀请</a>];
+              return [<a key="init">邀请</a>];
             },
           },
         }}

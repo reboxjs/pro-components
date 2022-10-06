@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import ProTable, { ProColumns, ColumnsState } from '@ant-design/pro-table';
+import type { ColumnsState, ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { useState } from 'react';
 
 const valueEnum = {
   0: 'close',
@@ -8,14 +9,14 @@ const valueEnum = {
   3: 'error',
 };
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   status: string;
   updatedAt: number;
   createdAt: number;
   money: number;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 for (let i = 0; i < 2; i += 1) {
@@ -39,8 +40,8 @@ const columns: ProColumns<TableListItem>[] = [
     title: '状态',
     dataIndex: 'status',
     initialValue: 'all',
-    width: 100,
     filters: true,
+    onFilter: true,
     valueType: 'select',
     valueEnum: {
       all: { text: '全部', status: 'Default' },
@@ -51,18 +52,11 @@ const columns: ProColumns<TableListItem>[] = [
     },
   },
   {
-    title: '创建时间',
-    key: 'since',
-    dataIndex: 'createdAt',
-    width: 200,
-    valueType: 'dateTime',
-  },
-  {
     title: '更新时间',
     key: 'since2',
-    width: 120,
     dataIndex: 'createdAt',
     valueType: 'date',
+    hideInSetting: true,
   },
 
   {
@@ -75,11 +69,10 @@ const columns: ProColumns<TableListItem>[] = [
 ];
 
 export default () => {
-  const [columnsStateMap, setColumnsStateMap] = useState<{
-    [key: string]: ColumnsState;
-  }>({
+  const [columnsStateMap, setColumnsStateMap] = useState<Record<string, ColumnsState>>({
     name: {
       show: false,
+      order: 2,
     },
   });
   return (
@@ -103,8 +96,10 @@ export default () => {
         search: true,
       }}
       rowKey="key"
-      columnsStateMap={columnsStateMap}
-      onColumnsStateChange={(map) => setColumnsStateMap(map)}
+      columnsState={{
+        value: columnsStateMap,
+        onChange: setColumnsStateMap,
+      }}
       search={false}
       dateFormatter="string"
       headerTitle="受控模式"

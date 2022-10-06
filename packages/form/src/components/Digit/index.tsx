@@ -1,24 +1,23 @@
+import type { InputNumberProps } from 'antd';
 import React from 'react';
-import { InputNumberProps } from 'antd/lib/input-number';
-import ProField from '@ant-design/pro-field';
-import { ProFormItemProps } from '../../interface';
-import createField from '../../BaseForm/createField';
+import type { ProFormFieldItemProps } from '../../interface';
+import ProFormField from '../Field';
 
-type ProFormDigitProps = ProFormItemProps<InputNumberProps> & {
+export type ProFormDigitProps = ProFormFieldItemProps<InputNumberProps> & {
   min?: InputNumberProps['min'];
   max?: InputNumberProps['max'];
 };
 /**
  * 数组选择组件
+ *
  * @param
  */
 const ProFormDigit: React.ForwardRefRenderFunction<any, ProFormDigitProps> = (
-  { fieldProps, min, proFieldProps, max },
+  { fieldProps, min, proFieldProps, max, ...rest },
   ref,
 ) => {
   return (
-    <ProField
-      mode="edit"
+    <ProFormField
       valueType="digit"
       fieldProps={{
         min,
@@ -26,9 +25,15 @@ const ProFormDigit: React.ForwardRefRenderFunction<any, ProFormDigitProps> = (
         ...fieldProps,
       }}
       ref={ref}
-      {...proFieldProps}
+      filedConfig={{
+        defaultProps: {
+          width: '100%',
+        },
+      }}
+      proFieldProps={proFieldProps}
+      {...rest}
     />
   );
 };
 
-export default createField<ProFormDigitProps>(React.forwardRef(ProFormDigit));
+export default React.forwardRef(ProFormDigit);

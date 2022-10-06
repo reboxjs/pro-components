@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Tag, Space, ConfigProvider } from 'antd';
-import ProTable, { ProColumns, TableDropdown, ActionType } from '@ant-design/pro-table';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
+import { ProTable, TableDropdown } from '@ant-design/pro-components';
+import { Button, ConfigProvider, Space, Tag } from 'antd';
+import { useRef } from 'react';
 import request from 'umi-request';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   url: string;
   id: number;
   number: number;
@@ -18,7 +19,7 @@ interface GithubIssueItem {
   created_at: string;
   updated_at: string;
   closed_at?: string;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
@@ -81,13 +82,6 @@ const columns: ProColumns<GithubIssueItem>[] = [
     ),
   },
   {
-    title: '创建时间',
-    key: 'since',
-    dataIndex: 'created_at',
-    valueType: 'dateTime',
-    width: '20%',
-  },
-  {
     title: '操作',
     valueType: 'option',
     render: (text, row, _, action) => [
@@ -102,7 +96,7 @@ const columns: ProColumns<GithubIssueItem>[] = [
       </a>,
       <TableDropdown
         key="actionGroup"
-        onSelect={() => action.reload()}
+        onSelect={() => action?.reload()}
         menus={[
           { key: 'copy', name: '复制' },
           { key: 'delete', name: '删除' },

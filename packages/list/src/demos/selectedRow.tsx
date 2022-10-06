@@ -1,6 +1,7 @@
-import React, { useState, ReactText } from 'react';
-import { Progress, Button } from 'antd';
-import ProList from '@ant-design/pro-list';
+import { ProList } from '@ant-design/pro-components';
+import { Button, Progress } from 'antd';
+import type { ReactText } from 'react';
+import { useState } from 'react';
 
 const dataSource = [
   {
@@ -72,7 +73,7 @@ export default () => {
         },
         actions: {
           render: () => {
-            return [<a>邀请</a>];
+            return [<a key="init">邀请</a>, '发布'];
           },
         },
       }}

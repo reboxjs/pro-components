@@ -1,23 +1,26 @@
 import { transformRoute } from '@umijs/route-utils';
-
-import { MenuDataItem, Route, MessageDescriptor } from '../typings';
+import type { MenuDataItem, MessageDescriptor, Route } from '../typings';
 
 function fromEntries(iterable: any) {
-  return [...iterable].reduce((obj: { [key: string]: MenuDataItem }, [key, val]) => {
+  return [...iterable].reduce((obj: Record<string, MenuDataItem>, [key, val]) => {
     // eslint-disable-next-line no-param-reassign
     obj[key] = val;
     return obj;
   }, {});
 }
 
-export default (
-  routes: Route[],
+const getMenuData = (
+  routes: Readonly<Route[]>,
   menu?: { locale?: boolean },
   formatMessage?: (message: MessageDescriptor) => string,
   menuDataRender?: (menuData: MenuDataItem[]) => MenuDataItem[],
-) => {
+): {
+  breadcrumb: Record<string, MenuDataItem>;
+  breadcrumbMap: Map<string, MenuDataItem>;
+  menuData: MenuDataItem[];
+} => {
   const { menuData, breadcrumb } = transformRoute(
-    routes,
+    routes as Route[],
     menu?.locale || false,
     formatMessage,
     true,
@@ -29,15 +32,7 @@ export default (
       menuData,
     };
   }
-  const renderData = transformRoute(
-    menuDataRender(menuData),
-    menu?.locale || false,
-    formatMessage,
-    true,
-  );
-  return {
-    breadcrumb: fromEntries(renderData.breadcrumb),
-    breadcrumbMap: renderData.breadcrumb,
-    menuData: renderData.menuData,
-  };
+  return getMenuData(menuDataRender(menuData), menu, formatMessage, undefined);
 };
+
+export { getMenuData };

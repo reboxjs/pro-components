@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button, Tooltip } from 'antd';
 import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import ProTable, { ProColumns, TableDropdown } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable, TableDropdown } from '@ant-design/pro-components';
+import { Button, Tooltip } from 'antd';
 
 const valueEnum = {
   0: 'close',
@@ -10,7 +10,7 @@ const valueEnum = {
   3: 'error',
 };
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   containers: number;
@@ -18,7 +18,7 @@ export interface TableListItem {
   status: string;
   createdAt: number;
   memo: string;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -79,7 +79,7 @@ const columns: ProColumns<TableListItem>[] = [
       <>
         创建时间
         <Tooltip placement="top" title="这是一段描述">
-          <QuestionCircleOutlined style={{ marginLeft: 4 }} />
+          <QuestionCircleOutlined style={{ marginInlineStart: 4 }} />
         </Tooltip>
       </>
     ),
@@ -118,19 +118,12 @@ const columns: ProColumns<TableListItem>[] = [
 export default () => {
   return (
     <ProTable<TableListItem>
-      columns={columns}
-      request={(params, sorter, filter) => {
-        // 表单搜索项会从 params 传入，传递给后端接口。
-        console.log(params, sorter, filter);
-        return Promise.resolve({
-          data: tableListDataSource,
-          success: true,
-        });
-      }}
+      dataSource={tableListDataSource}
       rowKey="key"
       pagination={{
         showQuickJumper: true,
       }}
+      columns={columns}
       search={false}
       dateFormatter="string"
       headerTitle="表格标题"

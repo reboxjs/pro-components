@@ -1,9 +1,8 @@
-import React from 'react';
-import { Button, Tag, Space } from 'antd';
-import ProList from '@ant-design/pro-list';
+import { ProList } from '@ant-design/pro-components';
+import { Button, Space, Tag } from 'antd';
 import request from 'umi-request';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   url: string;
   id: number;
   number: number;
@@ -17,7 +16,7 @@ interface GithubIssueItem {
   created_at: string;
   updated_at: string;
   closed_at?: string;
-}
+};
 
 export default () => (
   <ProList<GithubIssueItem>
@@ -46,11 +45,11 @@ export default () => (
     showActions="hover"
     metas={{
       title: {
-        dataIndex: ['user', 'login'],
+        dataIndex: 'user',
         title: '用户',
       },
       avatar: {
-        dataIndex: ['user', 'avatar_url'],
+        dataIndex: 'avatar',
         search: false,
       },
       description: {
@@ -63,7 +62,9 @@ export default () => (
           return (
             <Space size={0}>
               {row.labels?.map((label: { name: string }) => (
-                <Tag color="blue">{label.name}</Tag>
+                <Tag color="blue" key={label.name}>
+                  {label.name}
+                </Tag>
               ))}
             </Space>
           );
@@ -87,6 +88,7 @@ export default () => (
       status: {
         // 自己扩展的字段，主要用于筛选，不在列表中显示
         title: '状态',
+        valueType: 'select',
         valueEnum: {
           all: { text: '全部', status: 'Default' },
           open: {

@@ -1,6 +1,7 @@
 export default {
   'app.setting.pagestyle': '整體風格設置',
   'app.setting.pagestyle.dark': '暗色菜單風格',
+  'app.setting.pagestyle.realdark': '暗色風格(实验功能)',
   'app.setting.pagestyle.light': '亮色菜單風格',
   'app.setting.content-width': '內容區域寬度',
   'app.setting.content-width.fixed': '定寬',
@@ -11,7 +12,8 @@ export default {
   'app.setting.themecolor.sunset': '日暮',
   'app.setting.themecolor.cyan': '明青',
   'app.setting.themecolor.green': '極光綠',
-  'app.setting.themecolor.daybreak': '拂曉藍（默認）',
+  'app.setting.themecolor.techBlue': '科技蓝（默認）',
+  'app.setting.themecolor.daybreak': '拂曉藍',
   'app.setting.themecolor.geekblue': '極客藍',
   'app.setting.themecolor.purple': '醬紫',
   'app.setting.navigationmode': '導航模式',

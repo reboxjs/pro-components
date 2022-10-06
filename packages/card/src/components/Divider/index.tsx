@@ -1,42 +1,42 @@
-import React, { useContext } from 'react';
 import { ConfigProvider } from 'antd';
 import classNames from 'classnames';
+import React, { useContext } from 'react';
+import useStyle from './style';
 
-import './index.less';
-
-export interface ProCardDividerProps {
+export type ProCardDividerProps = {
   /**
-   * @description 自定义前缀
-   * @ignore
-   */
-  prefixCls?: string;
-  /**
-   * @description 样式
+   * 样式
+   *
    * @ignore
    */
   style?: React.CSSProperties;
   /**
-   * @description className
+   * ClassName
+   *
    * @ignore
    */
   className?: string;
-}
+  /**
+   * 布局类型
+   *
+   * @default vertical
+   */
+  type?: 'horizontal' | 'vertical';
+};
 
 const ProCardDivider: React.FC<ProCardDividerProps> = (props) => {
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
-  const prefixCls = getPrefixCls('pro-card-divider');
+  const proCardPrefixCls = getPrefixCls('pro-card');
+  const prefixCls = `${proCardPrefixCls}-divider`;
+  const { wrapSSR, hashId } = useStyle(proCardPrefixCls);
 
-  const { className, style = {}, children } = props;
+  const { className, style = {}, type } = props;
 
-  const classString = classNames(prefixCls, className, {
-    [`${prefixCls}-line`]: children === undefined,
+  const classString = classNames(prefixCls, className, hashId, {
+    [`${prefixCls}-${type}`]: type,
   });
 
-  return (
-    <div className={classString} style={style}>
-      {children}
-    </div>
-  );
+  return wrapSSR(<div className={classString} style={style} />);
 };
 
 export default ProCardDivider;

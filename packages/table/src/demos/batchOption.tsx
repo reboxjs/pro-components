@@ -1,6 +1,6 @@
-import React from 'react';
-import { Button, DatePicker, Space } from 'antd';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, DatePicker, Space, Table } from 'antd';
 
 const { RangePicker } = DatePicker;
 
@@ -18,7 +18,7 @@ const ProcessMap = {
   error: 'exception',
 };
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   progress: number;
@@ -28,7 +28,7 @@ export interface TableListItem {
   status: string;
   createdAt: number;
   memo: string;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -98,8 +98,8 @@ const columns: ProColumns<TableListItem>[] = [
     dataIndex: 'createdAt',
     valueType: 'date',
     sorter: (a, b) => a.createdAt - b.createdAt,
-    renderFormItem: (_, { value, onChange }) => {
-      return <RangePicker value={value} onChange={onChange} />;
+    renderFormItem: () => {
+      return <RangePicker />;
     },
   },
   {
@@ -111,7 +111,7 @@ const columns: ProColumns<TableListItem>[] = [
   },
   {
     title: '操作',
-    width: 180,
+    width: 80,
     key: 'option',
     valueType: 'option',
     fixed: 'right',
@@ -123,12 +123,17 @@ export default () => {
   return (
     <ProTable<TableListItem>
       columns={columns}
-      rowSelection={{}}
+      rowSelection={{
+        // 自定义选择项参考: https://ant.design/components/table-cn/#components-table-demo-row-selection-custom
+        // 注释该行则默认不显示下拉选项
+        selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT],
+        defaultSelectedRowKeys: [1],
+      }}
       tableAlertRender={({ selectedRowKeys, selectedRows, onCleanSelected }) => (
         <Space size={24}>
           <span>
             已选 {selectedRowKeys.length} 项
-            <a style={{ marginLeft: 8 }} onClick={onCleanSelected}>
+            <a style={{ marginInlineStart: 8 }} onClick={onCleanSelected}>
               取消选择
             </a>
           </span>
@@ -150,12 +155,7 @@ export default () => {
           </Space>
         );
       }}
-      request={() => {
-        return Promise.resolve({
-          data: tableListDataSource,
-          success: true,
-        });
-      }}
+      dataSource={tableListDataSource}
       scroll={{ x: 1300 }}
       options={false}
       search={false}

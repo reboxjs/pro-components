@@ -1,28 +1,47 @@
-import { DatePicker, ConfigProvider } from 'antd';
-import React, { useState, useContext } from 'react';
-import moment from 'moment';
 import { useIntl } from '@ant-design/pro-provider';
-import { FieldLabel, parseValueToMoment } from '@ant-design/pro-utils';
-import SizeContext from 'antd/lib/config-provider/SizeContext';
-import { DatePickerProps } from 'antd/lib/date-picker';
-import { ProFieldFC } from '../../index';
-import './index.less';
+import { FieldLabel, parseValueToDay, useStyle } from '@ant-design/pro-utils';
+import type { DatePickerProps } from 'antd';
+import { ConfigProvider, DatePicker } from 'antd';
+import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import React, { useContext, useState } from 'react';
+import type { ProFieldFC, ProFieldLightProps } from '../../index';
+
+// 兼容代码-----------
+import 'antd/es/date-picker/style';
+//----------------------
+
+dayjs.extend(weekOfYear);
+
+const formatDate = (text: any, format: any) => {
+  if (!text) {
+    return '-';
+  }
+  if (typeof format === 'function') {
+    return format(dayjs(text));
+  } else {
+    return dayjs(text).format(format || 'YYYY-MM-DD');
+  }
+};
 
 /**
  * 日期选择组件
+ *
  * @param
  */
-const FieldDatePicker: ProFieldFC<{
-  text: string | number;
-  format: string;
-  showTime?: boolean;
-  bordered?: boolean;
-  picker?: DatePickerProps['picker'];
-}> = (
+const FieldDatePicker: ProFieldFC<
+  {
+    text: string | number;
+    format: string;
+    showTime?: boolean;
+    bordered?: boolean;
+    picker?: DatePickerProps['picker'];
+  } & ProFieldLightProps
+> = (
   {
     text,
     mode,
-    format = 'YYYY-MM-DD',
+    format,
     label,
     light,
     render,
@@ -32,21 +51,38 @@ const FieldDatePicker: ProFieldFC<{
     fieldProps,
     picker,
     bordered,
+    lightLabel,
+    labelTrigger,
   },
   ref,
 ) => {
   const intl = useIntl();
-  const size = useContext(SizeContext);
+  const size = useContext(ConfigProvider.SizeContext);
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
   const prefixCls = getPrefixCls('pro-field-date-picker');
   const [open, setOpen] = useState<boolean>(false);
 
+  // css
+  const { wrapSSR, hashId } = useStyle('DatePicker', (token) => {
+    return {
+      [`.${prefixCls}-light`]: {
+        [`${token.antCls}-picker,${token.antCls}-calendar-picker`]: {
+          position: 'absolute',
+          width: '80px',
+          height: '28px',
+          overflow: 'hidden',
+          visibility: 'hidden',
+        },
+      },
+    };
+  });
+
   if (mode === 'read') {
-    const dom = <span ref={ref}>{text ? moment(text).format(format) : '-'}</span>;
+    const dom = formatDate(text, fieldProps.format || format);
     if (render) {
-      return render(text, { mode, ...fieldProps }, <span>{dom}</span>);
+      return render(text, { mode, ...fieldProps }, <>{dom}</>);
     }
-    return dom;
+    return <>{dom}</>;
   }
   if (mode === 'edit' || mode === 'update') {
     let dom;
@@ -57,32 +93,45 @@ const FieldDatePicker: ProFieldFC<{
       allowClear,
       placeholder = intl.getMessage('tableForm.selectPlaceholder', '请选择'),
     } = fieldProps;
-    const momentValue = parseValueToMoment(value, format) as moment.Moment;
+
+    const momentValue = parseValueToDay(value) as dayjs.Dayjs;
+
     if (light) {
       const valueStr: string = (momentValue && momentValue.format(format)) || '';
       dom = (
         <div
-          className={`${prefixCls}-light`}
-          onClick={() => {
-            setOpen(true);
+          className={`${prefixCls}-light ${hashId}`}
+          onClick={(e) => {
+            // 点击label切换下拉菜单
+            const isLabelClick = lightLabel?.current?.labelRef?.current?.contains(
+              e.target as HTMLElement,
+            );
+
+            if (isLabelClick) {
+              setOpen(!open);
+            } else {
+              setOpen(true);
+            }
           }}
         >
           <DatePicker
-            {...fieldProps}
             picker={picker}
             showTime={showTime}
             format={format}
             ref={ref}
+            {...fieldProps}
             value={momentValue}
             onChange={(v) => {
-              if (onChange) {
-                onChange(v);
-              }
+              onChange?.(v);
               setTimeout(() => {
                 setOpen(false);
               }, 0);
             }}
-            onOpenChange={setOpen}
+            onOpenChange={(isOpen) => {
+              if (!labelTrigger) {
+                setOpen(isOpen);
+              }
+            }}
             open={open}
           />
           <FieldLabel
@@ -92,26 +141,25 @@ const FieldDatePicker: ProFieldFC<{
             size={size}
             value={valueStr}
             onClear={() => {
-              if (onChange) {
-                onChange(null);
-              }
+              onChange?.(null);
             }}
             allowClear={allowClear}
             bordered={bordered}
             expanded={open}
+            ref={lightLabel}
           />
         </div>
       );
     } else {
       dom = (
         <DatePicker
-          {...fieldProps}
           picker={picker}
           showTime={showTime}
           format={format}
           placeholder={placeholder}
-          ref={ref}
           bordered={plain === undefined ? true : !plain}
+          ref={ref}
+          {...fieldProps}
           value={momentValue}
         />
       );
@@ -119,9 +167,8 @@ const FieldDatePicker: ProFieldFC<{
     if (renderFormItem) {
       return renderFormItem(text, { mode, ...fieldProps }, dom);
     }
-    return dom;
+    return wrapSSR(dom);
   }
   return null;
 };
-
 export default React.forwardRef(FieldDatePicker);

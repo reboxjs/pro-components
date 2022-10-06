@@ -1,29 +1,35 @@
-import React from 'react';
-import ProField from '@ant-design/pro-field';
-import { DatePickerProps } from 'antd/lib/date-picker';
-import { ProFormItemProps } from '../../interface';
-import createField from '../../BaseForm/createField';
+import { dateArrayFormatter } from '@ant-design/pro-utils';
+import type { RangePickerProps } from 'antd/es/date-picker';
+import React, { useContext } from 'react';
+import FieldContext from '../../FieldContext';
+import type { ProFormFieldItemProps } from '../../interface';
+import ProField from '../Field';
 
-const valueType = 'dateRange';
+const valueType = 'dateRange' as const;
 
 /**
  * 日期区间选择组件
+ *
  * @param
  */
-const ProFormDatePicker: React.FC<ProFormItemProps<
-  DatePickerProps
->> = React.forwardRef(({ fieldProps, proFieldProps }, ref) => (
-  <ProField
-    ref={ref}
-    text={fieldProps?.value}
-    mode="edit"
-    fieldProps={fieldProps}
-    valueType={valueType}
-    {...proFieldProps}
-  />
-));
+const ProFormDateRangePicker: React.FC<ProFormFieldItemProps<RangePickerProps>> = React.forwardRef(
+  ({ fieldProps, proFieldProps, ...rest }, ref) => {
+    const context = useContext(FieldContext);
+    return (
+      <ProField
+        ref={ref}
+        fieldProps={{ getPopupContainer: context.getPopupContainer, ...fieldProps }}
+        valueType={valueType}
+        proFieldProps={proFieldProps}
+        filedConfig={{
+          valueType,
+          lightFilterLabelFormatter: (value) =>
+            dateArrayFormatter(value, fieldProps?.format || 'YYYY-MM-DD'),
+        }}
+        {...rest}
+      />
+    );
+  },
+);
 
-export default createField<ProFormItemProps<DatePickerProps>>(ProFormDatePicker, {
-  valueType,
-  customLightMode: true,
-});
+export default ProFormDateRangePicker;

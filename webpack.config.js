@@ -1,13 +1,11 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const { readdirSync } = require('fs');
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-const tailPkgs = readdirSync(path.join(__dirname, 'packages')).filter(
-  (pkg) => pkg.charAt(0) !== '.',
-);
+const tailPkgs = ['components'];
 
 const webPackConfigList = [];
 
@@ -15,13 +13,12 @@ tailPkgs.forEach((pkg) => {
   const entry = {};
   entry[`${pkg}`] = `./packages/${pkg}/src/index.tsx`;
   entry[`${pkg}.min`] = `./packages/${pkg}/src/index.tsx`;
-
   const config = {
     entry,
     output: {
       filename: '[name].js',
       library: `Pro${pkg.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase())}`,
-      libraryExport: 'default',
+      libraryTarget: 'umd',
       path: path.resolve(__dirname, 'packages', pkg, 'dist'),
       globalObject: 'this',
     },
@@ -35,7 +32,7 @@ tailPkgs.forEach((pkg) => {
         new TerserPlugin({
           include: /\.min\.js$/,
         }),
-        new OptimizeCSSAssetsPlugin({
+        new CssMinimizerPlugin({
           include: /\.min\.js$/,
         }),
       ],
@@ -44,26 +41,14 @@ tailPkgs.forEach((pkg) => {
       rules: [
         {
           test: /\.(png|jpg|gif|svg)$/i,
-          use: [
-            {
-              loader: 'url-loader',
-              options: {
-                limit: 8192,
-              },
-            },
-          ],
+          type: 'asset',
         },
         {
           test: /\.jsx?$/,
           use: {
             loader: 'babel-loader',
             options: {
-              presets: ['@babel/typescript', '@babel/env', '@babel/react'],
-              plugins: [
-                ['@babel/plugin-proposal-decorators', { legacy: true }],
-                ['@babel/plugin-proposal-class-properties', { loose: true }],
-                '@babel/proposal-object-rest-spread',
-              ],
+              presets: ['@umijs/babel-preset-umi/app'],
             },
           },
         },
@@ -73,22 +58,7 @@ tailPkgs.forEach((pkg) => {
           use: {
             loader: 'babel-loader',
             options: {
-              presets: [
-                '@babel/typescript',
-                [
-                  '@babel/env',
-                  {
-                    loose: true,
-                    modules: false,
-                  },
-                ],
-                '@babel/react',
-              ],
-              plugins: [
-                ['@babel/plugin-proposal-decorators', { legacy: true }],
-                ['@babel/plugin-proposal-class-properties', { loose: true }],
-                '@babel/proposal-object-rest-spread',
-              ],
+              presets: ['@umijs/babel-preset-umi/app'],
             },
           },
         },
@@ -133,11 +103,11 @@ tailPkgs.forEach((pkg) => {
         react: 'React',
         'react-dom': 'ReactDOM',
         antd: 'antd',
-        moment: 'moment',
       },
     ],
     plugins: [
       new ProgressBarPlugin(),
+      // new BundleAnalyzerPlugin(),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional

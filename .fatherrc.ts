@@ -4,19 +4,29 @@ import { join } from 'path';
 // utils must build before core
 // runtime must build before renderer-react
 // components dependencies order: form -> table -> list
-const headPkgs: string[] = ['provider', 'utils', 'field', 'skeleton', 'form', 'table', 'list'];
+const headPkgs: string[] = [
+  'provider',
+  'utils',
+  'layout',
+  'card',
+  'field',
+  'skeleton',
+  'layout',
+  'form',
+  'table',
+  'list',
+  'descriptions',
+  'components',
+];
 const tailPkgs = readdirSync(join(__dirname, 'packages')).filter(
   (pkg) => pkg.charAt(0) !== '.' && !headPkgs.includes(pkg),
 );
 
 export default {
-  cjs: { type: 'babel', lazy: true },
+  cjs: false,
   esm: {
     type: 'babel',
-    importLibToEs: true,
   },
+  runtimeHelpers: true,
   pkgs: [...headPkgs, ...tailPkgs],
-  extraBabelPlugins: [
-    ['babel-plugin-import', { libraryName: 'antd', libraryDirectory: 'es', style: true }, 'antd'],
-  ],
 };

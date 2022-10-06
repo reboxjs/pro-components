@@ -1,7 +1,7 @@
+import { Card, Skeleton } from 'antd';
 import React from 'react';
-import { Skeleton, Card } from 'antd';
 import useMediaQuery from 'use-media-antd-query';
-import { PageHeaderSkeleton, Line } from '../List';
+import { Line, PageHeaderSkeleton } from '../List';
 
 export type DescriptionsPageSkeletonProps = {
   active?: boolean;
@@ -23,10 +23,10 @@ const DescriptionsLargeItemSkeleton: React.FC<{
 }> = ({ active }) => (
   <div
     style={{
-      marginTop: 32,
+      marginBlockStart: 32,
     }}
   >
-    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBottom: 16 }} />
+    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBlockEnd: 16 }} />
     <div
       style={{
         width: '100%',
@@ -37,7 +37,7 @@ const DescriptionsLargeItemSkeleton: React.FC<{
       <div
         style={{
           flex: 1,
-          marginRight: 24,
+          marginInlineEnd: 24,
           maxWidth: 300,
         }}
       >
@@ -45,21 +45,21 @@ const DescriptionsLargeItemSkeleton: React.FC<{
           active={active}
           paragraph={false}
           title={{
-            style: { marginTop: 0 },
+            style: { marginBlockStart: 0 },
           }}
         />
         <Skeleton
           active={active}
           paragraph={false}
           title={{
-            style: { marginTop: 8 },
+            style: { marginBlockStart: 8 },
           }}
         />
         <Skeleton
           active={active}
           paragraph={false}
           title={{
-            style: { marginTop: 8 },
+            style: { marginBlockStart: 8 },
           }}
         />
       </div>
@@ -80,14 +80,14 @@ const DescriptionsLargeItemSkeleton: React.FC<{
             active={active}
             paragraph={false}
             title={{
-              style: { marginTop: 0 },
+              style: { marginBlockStart: 0 },
             }}
           />
           <Skeleton
             active={active}
             paragraph={false}
             title={{
-              style: { marginTop: 8 },
+              style: { marginBlockStart: 8 },
             }}
           />
         </div>
@@ -116,29 +116,29 @@ const DescriptionsItemSkeleton: React.FC<{
           key={index}
           style={{
             flex: 1,
-            paddingLeft: index === 0 ? 0 : 24,
-            paddingRight: index === arraySize - 1 ? 0 : 24,
+            paddingInlineStart: index === 0 ? 0 : 24,
+            paddingInlineEnd: index === arraySize - 1 ? 0 : 24,
           }}
         >
           <Skeleton
             active={active}
             paragraph={false}
             title={{
-              style: { marginTop: 0 },
+              style: { marginBlockStart: 0 },
             }}
           />
           <Skeleton
             active={active}
             paragraph={false}
             title={{
-              style: { marginTop: 8 },
+              style: { marginBlockStart: 8 },
             }}
           />
           <Skeleton
             active={active}
             paragraph={false}
             title={{
-              style: { marginTop: 8 },
+              style: { marginBlockStart: 8 },
             }}
           />
         </div>
@@ -149,6 +149,7 @@ const DescriptionsItemSkeleton: React.FC<{
 
 /**
  * Table 的子项目骨架屏
+ *
  * @param param0
  */
 export const TableItemSkeleton = ({
@@ -175,8 +176,8 @@ export const TableItemSkeleton = ({
             key={index}
             style={{
               flex: 1,
-              paddingLeft: header && index === 0 ? 0 : 20,
-              paddingRight: 32,
+              paddingInlineStart: header && index === 0 ? 0 : 20,
+              paddingInlineEnd: 32,
             }}
           >
             <Skeleton
@@ -195,7 +196,7 @@ export const TableItemSkeleton = ({
         <div
           style={{
             flex: 3,
-            paddingLeft: 32,
+            paddingInlineStart: 32,
           }}
         >
           <Skeleton
@@ -214,6 +215,7 @@ export const TableItemSkeleton = ({
 
 /**
  * Table 骨架屏
+ *
  * @param param0
  */
 export const TableSkeleton: React.FC<{
@@ -221,7 +223,7 @@ export const TableSkeleton: React.FC<{
   size?: number;
 }> = ({ active, size = 4 }) => (
   <Card bordered={false}>
-    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBottom: 16 }} />
+    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBlockEnd: 16 }} />
     <TableItemSkeleton header active={active} />
     {new Array(size).fill(null).map((_, index) => (
       // eslint-disable-next-line react/no-array-index-key
@@ -231,7 +233,7 @@ export const TableSkeleton: React.FC<{
       style={{
         display: 'flex',
         justifyContent: 'flex-end',
-        paddingTop: 16,
+        paddingBlockStart: 16,
       }}
     >
       <Skeleton
@@ -253,11 +255,11 @@ export const DescriptionsSkeleton = ({ active }: { active: boolean }) => (
   <Card
     bordered={false}
     style={{
-      borderTopRightRadius: 0,
+      borderStartEndRadius: 0,
       borderTopLeftRadius: 0,
     }}
   >
-    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBottom: 16 }} />
+    <Skeleton.Button active={active} size="small" style={{ width: 100, marginBlockEnd: 16 }} />
     <DescriptionsItemSkeleton active={active} />
     <DescriptionsLargeItemSkeleton active={active} />
   </Card>

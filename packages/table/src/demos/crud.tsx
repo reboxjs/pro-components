@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Tabs, Tag, Space, message } from 'antd';
-import ProDescriptions from '@ant-design/pro-descriptions';
-import ProTable, { ProColumns, TableDropdown } from '@ant-design/pro-table';
+import type { ProColumns, ProDescriptionsItemProps } from '@ant-design/pro-components';
+import { ProCard, ProDescriptions, ProTable, TableDropdown } from '@ant-design/pro-components';
+import { Button, message, Space, Tabs, Tag } from 'antd';
+import { useState } from 'react';
 import request from 'umi-request';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   url: string;
   id: number;
   number: number;
@@ -19,12 +19,13 @@ interface GithubIssueItem {
   created_at: string;
   updated_at: string;
   closed_at?: string;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
     title: '序号',
     dataIndex: 'index',
+    width: 64,
     valueType: 'indexBorder',
   },
   {
@@ -32,7 +33,6 @@ const columns: ProColumns<GithubIssueItem>[] = [
     dataIndex: 'title',
     copyable: true,
     ellipsis: true,
-    width: 200,
     search: false,
   },
   {
@@ -40,6 +40,7 @@ const columns: ProColumns<GithubIssueItem>[] = [
     dataIndex: 'state',
     initialValue: 'all',
     filters: true,
+    onFilter: true,
     valueType: 'select',
     valueEnum: {
       all: { text: '全部', status: 'Default' },
@@ -60,6 +61,7 @@ const columns: ProColumns<GithubIssueItem>[] = [
     hideInDescriptions: true,
     dataIndex: 'direction',
     filters: true,
+    onFilter: true,
     valueType: 'select',
     valueEnum: {
       asc: '正序',
@@ -79,12 +81,6 @@ const columns: ProColumns<GithubIssueItem>[] = [
         ))}
       </Space>
     ),
-  },
-  {
-    title: '创建时间',
-    key: 'since',
-    dataIndex: 'created_at',
-    valueType: 'dateTime',
   },
   {
     title: 'option',
@@ -109,7 +105,7 @@ const columns: ProColumns<GithubIssueItem>[] = [
 export default () => {
   const [type, setType] = useState('table');
   return (
-    <>
+    <ProCard>
       <Tabs activeKey={type} onChange={(e) => setType(e)}>
         <Tabs.TabPane tab="table" key="table" />
         <Tabs.TabPane tab="form" key="form" />
@@ -145,7 +141,7 @@ export default () => {
           style={{
             background: '#fff',
           }}
-          columns={columns}
+          columns={columns as ProDescriptionsItemProps<GithubIssueItem>[]}
           request={async (params) => {
             const msg = await request<{
               data: GithubIssueItem[];
@@ -159,6 +155,6 @@ export default () => {
           }}
         />
       )}
-    </>
+    </ProCard>
   );
 };

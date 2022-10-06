@@ -1,10 +1,8 @@
+import { Card, Divider, Skeleton, Space } from 'antd';
 import React from 'react';
 import useMediaQuery from 'use-media-antd-query';
-import { Skeleton, Card, Space, Divider } from 'antd';
 
-/**
- * 一条分割线
- */
+/** 一条分割线 */
 export const Line = ({ padding }: { padding?: string | number }) => (
   <div
     style={{
@@ -31,19 +29,20 @@ const StatisticSkeleton: React.FC<{
   const colSize = useMediaQuery();
   const arraySize = size === undefined ? MediaQueryKeyEnum[colSize] || 6 : size;
   const firstWidth = (index: number) => {
-    if (arraySize > 2 && index !== 0) {
-      return 42;
-    }
     if (index === 0) {
       return 0;
     }
+    if (arraySize > 2) {
+      return 42;
+    }
     return 16;
   };
+
   return (
     <Card
       bordered={false}
       style={{
-        marginBottom: 16,
+        marginBlockEnd: 16,
       }}
     >
       <div
@@ -58,10 +57,11 @@ const StatisticSkeleton: React.FC<{
             // eslint-disable-next-line react/no-array-index-key
             key={index}
             style={{
-              borderLeft: arraySize > 2 && index === 1 ? '1px solid rgba(0,0,0,0.06)' : undefined,
-              paddingLeft: firstWidth(index),
+              borderInlineStart:
+                arraySize > 2 && index === 1 ? '1px solid rgba(0,0,0,0.06)' : undefined,
+              paddingInlineStart: firstWidth(index),
               flex: 1,
-              marginRight: index === 0 ? 16 : 0,
+              marginInlineEnd: index === 0 ? 16 : 0,
             }}
           >
             <Skeleton
@@ -69,7 +69,7 @@ const StatisticSkeleton: React.FC<{
               paragraph={false}
               title={{
                 width: 100,
-                style: { marginTop: 0 },
+                style: { marginBlockStart: 0 },
               }}
             />
             <Skeleton.Button
@@ -85,9 +85,7 @@ const StatisticSkeleton: React.FC<{
   );
 };
 
-/**
- * 列表子项目骨架屏
- */
+/** 列表子项目骨架屏 */
 export const ListSkeletonItem: React.FC<{ active: boolean }> = ({ active }) => (
   <>
     <Card
@@ -119,7 +117,7 @@ export const ListSkeletonItem: React.FC<{ active: boolean }> = ({ active }) => (
             title={{
               width: 100,
               style: {
-                marginTop: 0,
+                marginBlockStart: 0,
               },
             }}
             paragraph={{
@@ -130,16 +128,18 @@ export const ListSkeletonItem: React.FC<{ active: boolean }> = ({ active }) => (
             }}
           />
         </div>
-        <Skeleton.Button active={active} size="small" style={{ width: 165, marginTop: 12 }} />
+        <Skeleton.Button
+          active={active}
+          size="small"
+          style={{ width: 165, marginBlockStart: 12 }}
+        />
       </div>
     </Card>
     <Line />
   </>
 );
 
-/**
- * 列表骨架屏
- */
+/** 列表骨架屏 */
 export const ListSkeleton: React.FC<{
   size: number;
   active?: boolean;
@@ -160,7 +160,7 @@ export const ListSkeleton: React.FC<{
       <Card
         bordered={false}
         style={{
-          borderTopRightRadius: 0,
+          borderStartEndRadius: 0,
           borderTopLeftRadius: 0,
         }}
         bodyStyle={{
@@ -183,12 +183,13 @@ export const ListSkeleton: React.FC<{
 
 /**
  * 面包屑的 骨架屏
+ *
  * @param param0
  */
 export const PageHeaderSkeleton = ({ active }: { active: boolean }) => (
   <div
     style={{
-      marginBottom: 16,
+      marginBlockEnd: 16,
     }}
   >
     <Skeleton
@@ -212,6 +213,7 @@ export type ListPageSkeletonProps = {
 
 /**
  * 列表操作栏的骨架屏
+ *
  * @param param0
  */
 export const ListToolbarSkeleton = ({ active }: { active: boolean }) => (
@@ -222,7 +224,7 @@ export const ListToolbarSkeleton = ({ active }: { active: boolean }) => (
       borderBottomLeftRadius: 0,
     }}
     bodyStyle={{
-      paddingBottom: 8,
+      paddingBlockEnd: 8,
     }}
   >
     <Space

@@ -1,12 +1,12 @@
-import React from 'react';
-import { Button, Tooltip, Tag } from 'antd';
-import { DownOutlined, QuestionCircleOutlined, EllipsisOutlined } from '@ant-design/icons';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import { DownOutlined, EllipsisOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, Tag, Tooltip } from 'antd';
 
-export interface Status {
+export type Status = {
   color: string;
   text: string;
-}
+};
 
 const statusMap = {
   0: {
@@ -31,14 +31,14 @@ const statusMap = {
   },
 };
 
-export interface TableListItem {
+export type TableListItem = {
   key: number;
   name: string;
   containers: number;
   creator: string;
   status: Status;
   createdAt: number;
-}
+};
 const tableListDataSource: TableListItem[] = [];
 
 const creators = ['付小小', '曲丽丽', '林东东', '陈帅帅', '兼某某'];
@@ -93,7 +93,7 @@ const columns: ProColumns<TableListItem>[] = [
       <>
         创建时间
         <Tooltip placement="top" title="这是一段描述">
-          <QuestionCircleOutlined style={{ marginLeft: 4 }} />
+          <QuestionCircleOutlined style={{ marginInlineStart: 4 }} />
         </Tooltip>
       </>
     ),
@@ -105,7 +105,7 @@ const columns: ProColumns<TableListItem>[] = [
   },
   {
     title: '操作',
-    width: 180,
+    width: 164,
     key: 'option',
     valueType: 'option',
     render: () => [

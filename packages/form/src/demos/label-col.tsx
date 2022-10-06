@@ -1,7 +1,5 @@
-﻿import React from 'react';
-import ProForm, { ProFormText, ProFormCheckbox, ProFormRadio } from '@ant-design/pro-form';
-
-import { Form, Button } from 'antd';
+﻿import { ProForm, ProFormCheckbox, ProFormRadio, ProFormText } from '@ant-design/pro-components';
+import { Button } from 'antd';
 
 const layout = {
   labelCol: { span: 8 },
@@ -34,11 +32,11 @@ export default () => {
         <ProFormRadio name="remember" {...tailLayout}>
           Remember me
         </ProFormRadio>
-        <Form.Item {...tailLayout}>
+        <ProForm.Item {...tailLayout}>
           <Button type="primary" htmlType="submit">
             Submit
           </Button>
-        </Form.Item>
+        </ProForm.Item>
       </ProForm>
     </>
   );

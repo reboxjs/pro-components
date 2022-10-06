@@ -1,9 +1,11 @@
-import { mount } from 'enzyme';
-import React from 'react';
 import ProCard from '@ant-design/pro-card';
+import { mount } from 'enzyme';
+import { act } from 'react-dom/test-utils';
 import { waitForComponentToPaint } from '../util';
 
-describe('Field', () => {
+jest.mock('antd/es/grid/hooks/useBreakpoint');
+
+describe('Card', () => {
   it('🥩 collapsible onCollapse', async () => {
     const fn = jest.fn();
     const wrapper = mount(
@@ -12,7 +14,9 @@ describe('Field', () => {
       </ProCard>,
     );
     await waitForComponentToPaint(wrapper);
-    wrapper.find('AntdIcon.ant-pro-card-collapsible-icon').simulate('click');
+    act(() => {
+      wrapper.find('AntdIcon.ant-pro-card-collapsible-icon').simulate('click');
+    });
     expect(fn).toBeCalled();
   });
 
@@ -35,12 +39,52 @@ describe('Field', () => {
     await waitForComponentToPaint(wrapper);
     expect(wrapper.find('.ant-pro-card-collapse').exists()).toBeTruthy();
 
-    wrapper.setProps({
-      collapsed: false,
+    act(() => {
+      wrapper.setProps({
+        collapsed: false,
+      });
     });
 
     await waitForComponentToPaint(wrapper);
     expect(wrapper.find('.ant-pro-card-collapse').exists()).toBeFalsy();
+  });
+
+  it('🥩 collapsible icon custom render with defaultCollapsed', async () => {
+    const wrapper = mount(
+      <ProCard
+        title="可折叠-图标自定义"
+        collapsibleIconRender={({ collapsed }: { collapsed: boolean }) =>
+          collapsed ? <span>更多 - </span> : <span>收起 - </span>
+        }
+        headerBordered
+        defaultCollapsed
+        collapsible
+      >
+        内容
+      </ProCard>,
+    );
+    await waitForComponentToPaint(wrapper);
+    expect(wrapper.find('.ant-pro-card-collapse').exists()).toBeTruthy();
+    expect(wrapper.find('.ant-pro-card-title > span').text()).toEqual('更多 - ');
+  });
+
+  it('🥩 collapsible icon custom render', async () => {
+    const wrapper = mount(
+      <ProCard
+        title="可折叠-图标自定义"
+        collapsibleIconRender={({ collapsed }: { collapsed: boolean }) =>
+          collapsed ? <span>更多 - </span> : <span>收起 - </span>
+        }
+        defaultCollapsed={false}
+        collapsible
+      >
+        内容
+      </ProCard>,
+    );
+    await waitForComponentToPaint(wrapper);
+    expect(wrapper.find('.ant-pro-card').exists()).toBeTruthy();
+    expect(wrapper.find('.ant-pro-card-collapse').exists()).toBeFalsy();
+    expect(wrapper.find('.ant-pro-card-title > span').text()).toEqual('收起 - ');
   });
 
   it('🥩 tabs onChange', async () => {
@@ -49,19 +93,24 @@ describe('Field', () => {
       <ProCard
         tabs={{
           onChange: fn,
+          items: [
+            {
+              label: 'tab1',
+              key: 'tab1',
+              children: '产品一',
+            },
+            {
+              label: 'tab2',
+              key: 'tab2',
+              children: '产品二',
+            },
+          ],
         }}
-      >
-        <ProCard.TabPane key="tab1" tab="产品一">
-          内容一
-        </ProCard.TabPane>
-        <ProCard.TabPane key="tab2" tab="产品二">
-          内容二
-        </ProCard.TabPane>
-      </ProCard>,
+      />,
     );
-
-    wrapper.find('.ant-pro-card-tabs .ant-tabs-tab').at(1).simulate('click');
-
+    act(() => {
+      wrapper.find('.ant-pro-card-tabs .ant-tabs-tab').at(1).simulate('click');
+    });
     expect(fn).toHaveBeenCalledWith('tab2');
   });
 });

@@ -1,7 +1,6 @@
-import React from 'react';
-
-import ProLayout, { PageContainer, MenuDataItem } from '@ant-design/pro-layout';
-import { SmileOutlined, HeartOutlined } from '@ant-design/icons';
+import { HeartOutlined, SmileOutlined } from '@ant-design/icons';
+import type { MenuDataItem } from '@ant-design/pro-components';
+import { PageContainer, ProLayout } from '@ant-design/pro-components';
 
 const IconMap = {
   smile: <SmileOutlined />,
@@ -13,12 +12,12 @@ const defaultMenus = [
     path: '/',
     name: 'welcome',
     icon: 'smile',
-    children: [
+    routes: [
       {
         path: '/welcome',
         name: 'one',
         icon: 'smile',
-        children: [
+        routes: [
           {
             path: '/welcome/welcome',
             name: 'two',
@@ -36,40 +35,33 @@ const defaultMenus = [
   },
 ];
 
-const loopMenuItem = (menus: MenuDataItem[]): MenuDataItem[] =>
-  menus.map(({ icon, children, ...item }) => ({
+const loopMenuItem = (menus: any[]): MenuDataItem[] =>
+  menus.map(({ icon, routes, ...item }) => ({
     ...item,
     icon: icon && IconMap[icon as string],
-    children: children && loopMenuItem(children),
+    children: routes && loopMenuItem(routes),
   }));
 
 export default () => (
-  <div
-    id="test"
+  <ProLayout
     style={{
-      transform: 'rotate(0)',
-      overflowX: 'hidden',
+      minHeight: 500,
     }}
+    fixSiderbar
+    location={{
+      pathname: '/welcome/welcome',
+    }}
+    menu={{ request: async () => loopMenuItem(defaultMenus) }}
   >
-    <ProLayout
-      style={{
-        height: 500,
-      }}
-      collapsed
-      location={{
-        pathname: '/welcome',
-      }}
-      menuDataRender={() => loopMenuItem(defaultMenus)}
-    >
-      <PageContainer content="欢迎使用">
-        <div
-          style={{
-            height: '120vh',
-          }}
-        >
-          Hello World
-        </div>
-      </PageContainer>
-    </ProLayout>
-  </div>
+    <PageContainer content="欢迎使用">
+      <div
+        style={{
+          height: '120vh',
+          minHeight: 600,
+        }}
+      >
+        Hello World
+      </div>
+    </PageContainer>
+  </ProLayout>
 );

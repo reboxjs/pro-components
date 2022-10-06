@@ -1,38 +1,56 @@
-import React, { useContext } from 'react';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Tooltip, Space, ConfigProvider } from 'antd';
-import { TooltipProps } from 'antd/lib/tooltip';
-import './index.less';
+import { ConfigProvider, Tooltip } from 'antd';
+import type { LabelTooltipType, WrapperTooltipProps } from 'antd/es/form/FormItemLabel';
+import classNames from 'classnames';
+import React, { useContext } from 'react';
+import { useStyle } from './style';
 
 /**
  * 在 form 的 label 后面增加一个 tips 来展示一些说明文案
+ *
  * @param props
  */
-const LabelIconTip: React.FC<{
+export const LabelIconTip: React.FC<{
   label: React.ReactNode;
   subTitle?: React.ReactNode;
-  tooltip?: string | TooltipProps;
-}> = (props) => {
-  const { label, tooltip, subTitle } = props;
+  tooltip?: string | LabelTooltipType;
+  ellipsis?: boolean | { showTitle?: boolean };
+}> = React.memo((props) => {
+  const { label, tooltip, ellipsis, subTitle } = props;
   const { getPrefixCls } = useContext(ConfigProvider.ConfigContext);
+  const className = getPrefixCls('pro-core-label-tip');
 
+  const { wrapSSR, hashId } = useStyle(className);
   if (!tooltip && !subTitle) {
     return <>{label}</>;
   }
-  const className = getPrefixCls('pro-core-label-tip');
-  const tooltipProps = typeof tooltip === 'string' ? { title: tooltip } : (tooltip as TooltipProps);
+  const tooltipProps =
+    typeof tooltip === 'string' || React.isValidElement(tooltip)
+      ? { title: tooltip }
+      : (tooltip as WrapperTooltipProps);
 
-  return (
-    <Space size={8} className={className}>
-      {label}
-      {subTitle && <div className={`${className}-subtitle`}>{subTitle}</div>}
+  const icon = tooltipProps?.icon || <InfoCircleOutlined />;
+
+  return wrapSSR(
+    <div
+      className={classNames(className, hashId)}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseLeave={(e) => e.stopPropagation()}
+      onMouseMove={(e) => e.stopPropagation()}
+    >
+      <div
+        className={classNames(`${className}-title`, hashId, {
+          [`${className}-title-ellipsis`]: ellipsis,
+        })}
+      >
+        {label}
+      </div>
+      {subTitle && <div className={`${className}-subtitle ${hashId}`}>{subTitle}</div>}
       {tooltip && (
         <Tooltip {...tooltipProps}>
-          <InfoCircleOutlined className={`${className}-icon`} />
+          <span className={`${className}-icon ${hashId}`}>{icon}</span>
         </Tooltip>
       )}
-    </Space>
+    </div>,
   );
-};
-
-export default LabelIconTip;
+});

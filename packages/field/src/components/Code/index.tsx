@@ -1,7 +1,10 @@
 import { Input } from 'antd';
 import React from 'react';
+import type { ProFieldFC } from '../../index';
 
-import { ProFieldFC } from '../../index';
+// 兼容代码-----------
+import 'antd/es/input/style';
+//----------------------
 
 const languageFormat = (text: string, language: string) => {
   if (typeof text !== 'string') {
@@ -18,8 +21,8 @@ const languageFormat = (text: string, language: string) => {
 };
 
 /**
- * 代码片段组件
- * 这个组件为了显示简单的配置，复杂的请使用更加重型的组件
+ * 代码片段组件 这个组件为了显示简单的配置，复杂的请使用更加重型的组件
+ *
  * @param
  */
 const FieldCode: ProFieldFC<{
@@ -30,6 +33,8 @@ const FieldCode: ProFieldFC<{
   if (mode === 'read') {
     const dom = (
       <pre
+        ref={ref}
+        {...fieldProps}
         style={{
           padding: 16,
           overflow: 'auto',
@@ -38,9 +43,8 @@ const FieldCode: ProFieldFC<{
           backgroundColor: '#f6f8fa',
           borderRadius: 3,
           width: 'min-content',
+          ...fieldProps.style,
         }}
-        ref={ref}
-        {...fieldProps}
       >
         <code>{code}</code>
       </pre>

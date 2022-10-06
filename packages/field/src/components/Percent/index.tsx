@@ -1,9 +1,13 @@
-import React, { Fragment, ReactNode, useMemo } from 'react';
 import { InputNumber } from 'antd';
 import toNumber from 'lodash.tonumber';
+import type { ReactNode } from 'react';
+import React, { Fragment, useMemo } from 'react';
+import type { ProFieldFC } from '../../index';
+import { getColorByRealValue, getRealTextWithPrecision, getSymbolByRealValue } from './util';
 
-import { getColorByRealValue, getSymbolByRealValue, getRealTextWithPrecision } from './util';
-import { ProFieldFC } from '../../index';
+// 兼容代码-----------
+import 'antd/es/input-number/style';
+//------------
 
 export type PercentPropInt = {
   prefix?: ReactNode;
@@ -11,26 +15,28 @@ export type PercentPropInt = {
   text?: number | string;
   precision?: number;
   showColor?: boolean;
-  showSymbol?: boolean;
+  showSymbol?: boolean | ((value: any) => boolean);
+  placeholder?: any;
 };
 
 /**
  * 百分比组件
- * @param  PercentPropInt
+ *
+ * @param PercentPropInt
  */
 const FieldPercent: ProFieldFC<PercentPropInt> = (
   {
     text,
     prefix,
     precision,
-    showSymbol,
     suffix = '%',
     mode,
     showColor = false,
     render,
     renderFormItem,
     fieldProps,
-    ...rest
+    placeholder,
+    showSymbol: propsShowSymbol,
   },
   ref,
 ) => {
@@ -41,6 +47,12 @@ const FieldPercent: ProFieldFC<PercentPropInt> = (
         : toNumber(text),
     [text],
   );
+  const showSymbol = useMemo(() => {
+    if (typeof propsShowSymbol === 'function') {
+      return propsShowSymbol?.(text);
+    }
+    return propsShowSymbol;
+  }, [propsShowSymbol, text]);
 
   if (mode === 'read') {
     /** 颜色有待确定, 根据提供 colors: ['正', '负'] | boolean */
@@ -65,14 +77,12 @@ const FieldPercent: ProFieldFC<PercentPropInt> = (
         ref={ref}
         formatter={(value) => {
           if (value && prefix) {
-            return `${prefix} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            return `${prefix} ${value}`.replace(/\B(?=(\d{3})+(?!\d)$)/g, ',');
           }
           return value;
         }}
-        parser={(value) =>
-          value ? value.replace(new RegExp(`\\${prefix}\\s?|(,*)`, 'g'), '') : ''
-        }
-        {...rest}
+        parser={(value) => (value ? value.replace(/.*\s|,/g, '') : '')}
+        placeholder={placeholder}
         {...fieldProps}
       />
     );

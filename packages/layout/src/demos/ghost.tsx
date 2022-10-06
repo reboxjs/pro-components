@@ -1,6 +1,4 @@
-import React from 'react';
-import ProLayout, { PageContainer } from '@ant-design/pro-layout';
-import ProCard from '@ant-design/pro-card';
+import { PageContainer, ProCard, ProLayout } from '@ant-design/pro-components';
 import { Descriptions } from 'antd';
 import defaultProps from './_defaultProps';
 
@@ -29,8 +27,15 @@ export default () => {
           pathname: '/welcome',
         }}
       >
-        <PageContainer ghost content={content}>
-          <ProCard direction="column" ghost gutter={[0, 16]}>
+        <PageContainer fixedHeader content={content}>
+          <ProCard
+            direction="column"
+            ghost
+            gutter={[0, 16]}
+            style={{
+              height: '200vh',
+            }}
+          >
             <ProCard style={{ height: 200 }} />
             <ProCard gutter={16} ghost style={{ height: 200 }}>
               <ProCard colSpan={16} />

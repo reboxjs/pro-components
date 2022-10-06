@@ -1,11 +1,11 @@
-import React from 'react';
-import ProTable, { ProColumns } from '@ant-design/pro-table';
+import type { ProColumns } from '@ant-design/pro-components';
+import { ProTable } from '@ant-design/pro-components';
 
-interface GithubIssueItem {
+type GithubIssueItem = {
   key: number;
   name: string;
   createdAt: number;
-}
+};
 
 const columns: ProColumns<GithubIssueItem>[] = [
   {
@@ -17,12 +17,6 @@ const columns: ProColumns<GithubIssueItem>[] = [
     title: '标题',
     dataIndex: 'name',
     search: false,
-  },
-  {
-    title: '创建时间',
-    key: 'since',
-    dataIndex: 'created_at',
-    valueType: 'dateTime',
   },
 ];
 

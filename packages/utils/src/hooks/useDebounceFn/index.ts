@@ -1,66 +1,49 @@
-import { useEffect, useRef, DependencyList, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { act } from 'react-dom/test-utils';
+import { useRefFunction } from '../useRefFunction';
 
-export interface ReturnValue<T extends any[]> {
-  run: (...args: T) => void;
-  cancel: () => void;
-}
-const useUpdateEffect: typeof useEffect = (effect, deps) => {
-  const isMounted = useRef(false);
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      isMounted.current = true;
-    } else {
-      return effect();
-    }
-    return () => undefined;
-  }, deps);
-};
-
-function useDebounceFn<T extends any[]>(
+export function useDebounceFn<T extends any[], U = any>(
   fn: (...args: T) => Promise<any>,
-  deps: DependencyList | number,
   wait?: number,
-): ReturnValue<T> {
-  // eslint-disable-next-line no-underscore-dangle
-  const hooksDeps: DependencyList = (Array.isArray(deps) ? deps : []) as DependencyList;
-  // eslint-disable-next-line no-underscore-dangle
-  const hookWait: number = typeof deps === 'number' ? deps : wait || 0;
-  const timer = useRef<any>();
+) {
+  const callback = useRefFunction(fn);
 
-  const fnRef = useRef<any>(fn);
-  fnRef.current = fn;
+  const timer = useRef<any>();
 
   const cancel = useCallback(() => {
     if (timer.current) {
       clearTimeout(timer.current);
+      timer.current = null;
     }
   }, []);
 
   const run = useCallback(
-    async (...args: any) => {
-      return new Promise((resolve) => {
-        cancel();
+    async (...args: any): Promise<U | undefined> => {
+      if (wait === 0 || wait === undefined) {
+        return callback(...args);
+      }
+      cancel();
+      return new Promise<U>((resolve) => {
         timer.current = setTimeout(async () => {
-          await fnRef.current(...args);
-          resolve();
-        }, hookWait);
+          if (process.env.NODE_ENV === 'TEST') {
+            await act(async () => {
+              resolve(await callback(...args));
+            });
+            return;
+          }
+          resolve(await callback(...args));
+        }, wait);
       });
     },
-    [hookWait, cancel],
+    [callback, cancel, wait],
   );
 
-  useUpdateEffect(() => {
-    run();
+  useEffect(() => {
     return cancel;
-  }, [...hooksDeps, run]);
-
-  useEffect(() => cancel, []);
+  }, [cancel]);
 
   return {
     run,
     cancel,
   };
 }
-
-export default useDebounceFn;
